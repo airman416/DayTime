@@ -8,6 +8,7 @@
 import Foundation
 import UserNotifications
 import SwiftUI
+import SwiftData
 
 @Observable
 class TimerService {
@@ -23,7 +24,7 @@ class TimerService {
     }
     
     func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge, .timeSensitive]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if granted {
                 print("Notification permission granted")
             } else {
@@ -65,6 +66,8 @@ class TimerService {
             content.title = "🚨 DayTime Check-in!"
             content.body = "Time to log your activity! What did you accomplish?"
             content.categoryIdentifier = "DAYTIME_ALARM"
+            content.threadIdentifier = "daytime-checkin"
+            // Time-sensitive can break through some DND settings
             content.interruptionLevel = .timeSensitive
             content.userInfo = ["sessionId": currentSessionId?.uuidString ?? ""]
             content.sound = UNNotificationSound.default

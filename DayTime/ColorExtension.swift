@@ -8,5 +8,7 @@
 import SwiftUI
 
 extension Color {
-    static let dayTimePurple = Color(red: 0.4, green: 0.2, blue: 0.8)
+    // Hex Code: #FFDE34
+    // RGB: (255, 222, 52)
+    static let themeColor = Color(red: 255/255, green: 222/255, blue: 52/255)
 }

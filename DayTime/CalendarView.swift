@@ -79,7 +79,7 @@ struct ActivityCard: View {
                     .foregroundColor(.secondary)
                 
                 Circle()
-                    .fill(Color.dayTimePurple.gradient)
+                    .fill(Color.themeColor.gradient)
                     .frame(width: 12, height: 12)
             }
             

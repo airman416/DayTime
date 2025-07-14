@@ -13,7 +13,6 @@ struct SettingsView: View {
     @Query private var settings: [UserSettings]
     @State private var userName = ""
     @State private var timerInterval = 900 // 15 minutes in seconds
-    @State private var notificationSound = "default"
     private let timerService = TimerService.shared
     
     private var userSettings: UserSettings? {
@@ -21,7 +20,6 @@ struct SettingsView: View {
     }
     
     let intervalOptions = [5, 30, 300, 600, 900, 1200, 1800, 2700, 3600]
-    let soundOptions = ["default", "gentle", "chime", "bell"]
     
     var body: some View {
         Form {
@@ -39,13 +37,6 @@ struct SettingsView: View {
                     ForEach(intervalOptions, id: \.self) { interval in
                         Text(formatInterval(interval))
                             .tag(interval)
-                    }
-                }
-                
-                Picker("Notification Sound", selection: $notificationSound) {
-                    ForEach(soundOptions, id: \.self) { sound in
-                        Text(sound.capitalized)
-                            .tag(sound)
                     }
                 }
             }
@@ -87,7 +78,6 @@ struct SettingsView: View {
         if let settings = userSettings {
             userName = settings.userName
             timerInterval = settings.timerInterval
-            notificationSound = settings.notificationSoundName
         }
     }
     
@@ -95,12 +85,11 @@ struct SettingsView: View {
         if let existingSettings = userSettings {
             existingSettings.userName = userName
             existingSettings.timerInterval = timerInterval
-            existingSettings.notificationSoundName = notificationSound
         } else {
             let newSettings = UserSettings(
                 userName: userName,
                 timerInterval: timerInterval,
-                notificationSoundName: notificationSound,
+                notificationSoundName: "default",
                 isOnboardingComplete: true
             )
             modelContext.insert(newSettings)

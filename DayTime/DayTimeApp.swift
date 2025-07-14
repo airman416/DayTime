@@ -32,10 +32,30 @@ struct DayTimeApp: App {
         WindowGroup {
             ContentView()
                 .onAppear {
-                    UNUserNotificationCenter.current().delegate = notificationDelegate
+                    setupNotifications()
                 }
         }
         .modelContainer(sharedModelContainer)
+    }
+    
+    private func setupNotifications() {
+        UNUserNotificationCenter.current().delegate = notificationDelegate
+        
+        // Register notification categories
+        let openAction = UNNotificationAction(
+            identifier: "OPEN_APP",
+            title: "Open App",
+            options: [.foreground]
+        )
+        
+        let category = UNNotificationCategory(
+            identifier: "DAYTIME_ALARM",
+            actions: [openAction],
+            intentIdentifiers: [],
+            options: [.allowInCarPlay, .customDismissAction]
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([category])
     }
 }
 

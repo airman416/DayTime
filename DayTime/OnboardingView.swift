@@ -22,7 +22,7 @@ struct OnboardingView: View {
             VStack(spacing: 20) {
                 Image(systemName: "clock.fill")
                     .font(.system(size: 80))
-                    .foregroundStyle(Color.dayTimePurple.gradient)
+                    .foregroundStyle(Color.themeColor.gradient)
                     .scaleEffect(isAnimating ? 1.1 : 1.0)
                     .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
                 
@@ -56,7 +56,7 @@ struct OnboardingView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.dayTimePurple.gradient)
+                        .background(Color.themeColor.gradient)
                         .cornerRadius(12)
                 }
                 .disabled(userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

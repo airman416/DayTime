@@ -17,6 +17,9 @@ struct DashboardView: View {
     @State private var currentActivity = ""
     @State private var isSessionActive = false
     @State private var lastNotificationTime: Date?
+    @State private var countdownTimer: Timer?
+    @State private var timeRemaining: Int = 0
+    @State private var iconOpacity: Double = 1.0
     
     private var userSettings: UserSettings? {
         settings.first
@@ -46,31 +49,46 @@ struct DashboardView: View {
                 VStack(spacing: 20) {
                     if isSessionActive {
                         VStack(spacing: 15) {
-                            Image(systemName: "timer")
-                                .font(.system(size: 60))
+                            Image("clocky")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 80, height: 80)
                                 .foregroundStyle(.green.gradient)
-                                .symbolEffect(.pulse)
+                                .opacity(iconOpacity)
                             
                             Text("Session Active")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             
-                            Text("We'll check in with you every \(formatTimerInterval(timerService.timerInterval))")
+                            // Countdown Timer
+                            VStack(spacing: 5) {
+                                Text("Next check-in in:")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(formatCountdown(timeRemaining))
+                                    .font(.system(size: 24, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(.green.gradient)
+                            }
+                            
+                            Text("Clocky will check in with you every \(formatTimerInterval(timerService.timerInterval))")
                                 .font(.body)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
                         }
                     } else {
                         VStack(spacing: 15) {
-                            Image(systemName: "play.circle")
-                                .font(.system(size: 60))
-                                .foregroundStyle(Color.dayTimePurple.gradient)
+                            Image("clocky")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 80, height: 80)
+                                .foregroundStyle(Color.themeColor.gradient)
                             
                             Text("Ready to Begin")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             
-                            Text("Start your productivity session and we'll help you track your progress")
+                            Text("Start your productivity session and Clocky will help you track your progress")
                                 .font(.body)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -101,7 +119,7 @@ struct DashboardView: View {
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color.dayTimePurple.gradient)
+                                .background(Color.themeColor.gradient)
                                 .cornerRadius(12)
                         }
                     }
@@ -111,13 +129,13 @@ struct DashboardView: View {
                             CalendarView()
                         }
                         .font(.title3)
-                        .foregroundColor(.dayTimePurple)
+                        .foregroundColor(.themeColor)
                         
                         NavigationLink("Day Overview") {
                             DayOverviewView()
                         }
                         .font(.title3)
-                        .foregroundColor(.dayTimePurple)
+                        .foregroundColor(.themeColor)
                     }
                 }
                 
@@ -132,7 +150,7 @@ struct DashboardView: View {
                         SettingsView()
                     } label: {
                         Image(systemName: "gear")
-                            .foregroundColor(.dayTimePurple)
+                            .foregroundColor(.themeColor)
                     }
                 }
             }
@@ -151,6 +169,20 @@ struct DashboardView: View {
                 timerService.updateTimerInterval(settings.timerInterval)
             }
             setupAlarmHandling()
+            
+            if isSessionActive {
+                startCountdownTimer()
+                // Start flashing animation for existing active session
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    iconOpacity = 0.3
+                }
+            } else {
+                // Ensure icon is solid when not active
+                iconOpacity = 1.0
+            }
+        }
+        .onDisappear {
+            stopCountdownTimer()
         }
     }
     
@@ -164,7 +196,13 @@ struct DashboardView: View {
             isSessionActive = true
         }
         
+        // Start the flashing animation
+        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+            iconOpacity = 0.3
+        }
+        
         lastNotificationTime = Date()
+        startCountdownTimer()
     }
     
     private func stopSession() {
@@ -178,12 +216,61 @@ struct DashboardView: View {
             isSessionActive = false
         }
         
+        // Stop the flashing animation and return to solid
+        withAnimation(.easeInOut(duration: 0.3)) {
+            iconOpacity = 1.0
+        }
+        
         lastNotificationTime = nil
+        stopCountdownTimer()
+    }
+    
+    private func startCountdownTimer() {
+        // Calculate initial time remaining
+        updateTimeRemaining()
+        
+        // Start the countdown timer
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            updateTimeRemaining()
+        }
+    }
+    
+    private func stopCountdownTimer() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+    }
+    
+    private func updateTimeRemaining() {
+        guard let session = activeSession else {
+            timeRemaining = 0
+            return
+        }
+        
+        let sessionStartTime = lastNotificationTime ?? session.startTime
+        let elapsed = Int(Date().timeIntervalSince(sessionStartTime))
+        let interval = timerService.timerInterval
+        
+        // Calculate time remaining until next notification
+        let timeUntilNext = interval - (elapsed % interval)
+        timeRemaining = timeUntilNext
+        
+        // Reset when alarm should trigger
+        if timeRemaining <= 0 {
+            lastNotificationTime = Date()
+            timeRemaining = interval
+        }
+    }
+    
+    private func formatCountdown(_ seconds: Int) -> String {
+        let minutes = seconds / 60
+        let remainingSeconds = seconds % 60
+        return String(format: "%02d:%02d", minutes, remainingSeconds)
     }
     
     private func setupAlarmHandling() {
         timerService.onAlarmTriggered = {
             showingAlarm = true
+            lastNotificationTime = Date()
         }
     }
     
