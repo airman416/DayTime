@@ -12,6 +12,7 @@ struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
     @Query private var sessions: [TrackingSession]
+    @Query private var activities: [ActivityEntry]
     @State private var timerService = TimerService.shared
     @State private var showingAlarm = false
     @State private var currentActivity = ""
@@ -191,6 +192,16 @@ struct DashboardView: View {
         let session = TrackingSession(startTime: Date())
         session.id = sessionId
         modelContext.insert(session)
+        
+        let calendar = Calendar.current
+        let isFirstForDay = !activities.contains { activity in
+            calendar.isDate(activity.timestamp, inSameDayAs: Date())
+        }
+        
+        if isFirstForDay {
+            let startTrackingActivity = ActivityEntry(activity: "Started Tracking", sessionId: session.id)
+            modelContext.insert(startTrackingActivity)
+        }
         
         withAnimation(.spring()) {
             isSessionActive = true

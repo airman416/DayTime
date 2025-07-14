@@ -9,72 +9,69 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct DayTimeWidgetsAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
-    }
-
-    // Fixed non-changing properties about your activity go here!
-    var name: String
-}
-
 struct DayTimeWidgetsLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: DayTimeWidgetsAttributes.self) { context in
+        ActivityConfiguration(for: DayTimeActivityAttributes.self) { context in
             // Lock screen/banner UI goes here
-            VStack {
-                Text("Hello \(context.state.emoji)")
+            HStack {
+                Image("clocky")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .colorInvert()
+                Spacer()
+                Text("Next check-in:")
+                    .foregroundColor(.white)
+                Spacer()
+                Text(timerInterval: context.state.nextCheckInTime...Date.distantFuture, countsDown: true)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 80)
+                    .foregroundColor(.white)
             }
-            .activityBackgroundTint(Color.cyan)
-            .activitySystemActionForegroundColor(Color.black)
+            .padding()
+            .activityBackgroundTint(Color.black.opacity(0.8))
+            .activitySystemActionForegroundColor(.white)
 
         } dynamicIsland: { context in
             DynamicIsland {
                 // Expanded UI goes here.  Compose the expanded UI through
                 // various regions, like leading/trailing/center/bottom
                 DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
+                    Image("clocky")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .colorInvert()
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
+                     Text(timerInterval: context.state.nextCheckInTime...Date.distantFuture, countsDown: true)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                        .foregroundColor(.white)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.emoji)")
+                    Text("What are you working on?")
+                        .font(.caption)
+                        .foregroundColor(.white)
                     // more content
                 }
             } compactLeading: {
-                Text("L")
+                Image("clocky")
+                    .resizable()
+                    .scaledToFit()
+                    .colorInvert()
             } compactTrailing: {
-                Text("T \(context.state.emoji)")
+                Text(timerInterval: context.state.nextCheckInTime...Date.distantFuture, countsDown: true)
+                    .frame(width: 50)
+                    .foregroundColor(.white)
             } minimal: {
-                Text(context.state.emoji)
+                 Image("clocky")
+                    .resizable()
+                    .scaledToFit()
+                    .colorInvert()
             }
             .widgetURL(URL(string: "http://www.apple.com"))
             .keylineTint(Color.red)
         }
     }
-}
-
-extension DayTimeWidgetsAttributes {
-    fileprivate static var preview: DayTimeWidgetsAttributes {
-        DayTimeWidgetsAttributes(name: "World")
-    }
-}
-
-extension DayTimeWidgetsAttributes.ContentState {
-    fileprivate static var smiley: DayTimeWidgetsAttributes.ContentState {
-        DayTimeWidgetsAttributes.ContentState(emoji: "😀")
-     }
-     
-     fileprivate static var starEyes: DayTimeWidgetsAttributes.ContentState {
-         DayTimeWidgetsAttributes.ContentState(emoji: "🤩")
-     }
-}
-
-#Preview("Notification", as: .content, using: DayTimeWidgetsAttributes.preview) {
-   DayTimeWidgetsLiveActivity()
-} contentStates: {
-    DayTimeWidgetsAttributes.ContentState.smiley
-    DayTimeWidgetsAttributes.ContentState.starEyes
 }

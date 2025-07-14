@@ -24,8 +24,10 @@ struct DayTimeLiveActivityView: View {
             VStack(alignment: .leading) {
                 Text("Next Check-in:")
                     .font(.caption)
+                    .foregroundColor(.white)
                 Text(timerInterval: Date()...context.state.nextCheckInTime, countsDown: true)
                     .font(.title.bold())
+                    .foregroundColor(.white)
             }
             .padding(.trailing)
         }

@@ -30,15 +30,20 @@ struct DayOverviewView: View {
     }
     
     private var totalProductiveTime: String {
-        let totalSeconds = dayActivities.count * (userSettings?.timerInterval ?? 900)
-        let minutes = totalSeconds / 60
-        let hours = minutes / 60
-        let remainingMinutes = minutes % 60
+        guard dayActivities.count > 1,
+              let firstActivity = dayActivities.first,
+              let lastActivity = dayActivities.last else {
+            return "0m"
+        }
+        
+        let difference = Calendar.current.dateComponents([.hour, .minute], from: firstActivity.timestamp, to: lastActivity.timestamp)
+        let hours = difference.hour ?? 0
+        let minutes = difference.minute ?? 0
         
         if hours > 0 {
-            return "\(hours)h \(remainingMinutes)m"
+            return "\(hours)h \(minutes)m"
         } else {
-            return "\(remainingMinutes)m"
+            return "\(minutes)m"
         }
     }
     

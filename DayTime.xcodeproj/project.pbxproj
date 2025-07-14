@@ -51,28 +51,25 @@
 			);
 			target = C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */;
 		};
-		C18267372E259E1900AEEDEF /* Exceptions for "DayTime" folder in "DayTimeWidgetsExtension" target */ = {
+		C182673C2E25A1E600AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTime" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Assets.xcassets,
 				DayTimeActivityAttributes.swift,
 			);
-			target = C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */;
+			target = C18266442E240F9500AEEDEF /* DayTime */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C18266472E240F9500AEEDEF /* DayTime */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C18267372E259E1900AEEDEF /* Exceptions for "DayTime" folder in "DayTimeWidgetsExtension" target */,
-			);
 			path = DayTime;
 			sourceTree = "<group>";
 		};
 		C18267212E259E0000AEEDEF /* DayTimeWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				C182673C2E25A1E600AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTime" target */,
 				C18267322E259E0000AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTimeWidgetsExtension" target */,
 			);
 			path = DayTimeWidgets;
