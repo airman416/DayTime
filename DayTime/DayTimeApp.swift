@@ -7,12 +7,17 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 @main
 struct DayTimeApp: App {
+    @StateObject private var notificationDelegate = AppNotificationDelegate()
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            ActivityEntry.self,
+            TrackingSession.self,
+            UserSettings.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -26,7 +31,38 @@ struct DayTimeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    UNUserNotificationCenter.current().delegate = notificationDelegate
+                }
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+class AppNotificationDelegate: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
+    
+    // This allows notifications to show even when app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        
+        // Show the alarm notification with sound even when app is open
+        completionHandler([.banner, .sound, .badge])
+        
+        // Also trigger the in-app alarm
+        DispatchQueue.main.async {
+            TimerService.shared.onAlarmTriggered?()
+        }
+    }
+    
+    // Handle when user taps the notification
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        
+        if response.notification.request.content.categoryIdentifier == "DAYTIME_ALARM" {
+            DispatchQueue.main.async {
+                // Trigger the alarm view when notification is tapped
+                TimerService.shared.onAlarmTriggered?()
+            }
+        }
+        
+        completionHandler()
     }
 }
