@@ -1,6 +1,6 @@
 //
 //  AppIntent.swift
-//  DayTimeLiveActivity
+//  DayTimeWidgets
 //
 //  Created by Armaan Agrawal on 7/14/25.
 //

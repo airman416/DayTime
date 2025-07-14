@@ -1,6 +1,6 @@
 //
-//  DayTimeLiveActivityControl.swift
-//  DayTimeLiveActivity
+//  DayTimeWidgetsControl.swift
+//  DayTimeWidgets
 //
 //  Created by Armaan Agrawal on 7/14/25.
 //
@@ -9,8 +9,8 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-struct DayTimeLiveActivityControl: ControlWidget {
-    static let kind: String = "live.swipefeed.DayTime.DayTimeLiveActivity"
+struct DayTimeWidgetsControl: ControlWidget {
+    static let kind: String = "live.swipefeed.DayTime.DayTimeWidgets"
 
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(
@@ -30,7 +30,7 @@ struct DayTimeLiveActivityControl: ControlWidget {
     }
 }
 
-extension DayTimeLiveActivityControl {
+extension DayTimeWidgetsControl {
     struct Value {
         var isRunning: Bool
         var name: String
@@ -38,12 +38,12 @@ extension DayTimeLiveActivityControl {
 
     struct Provider: AppIntentControlValueProvider {
         func previewValue(configuration: TimerConfiguration) -> Value {
-            DayTimeLiveActivityControl.Value(isRunning: false, name: configuration.timerName)
+            DayTimeWidgetsControl.Value(isRunning: false, name: configuration.timerName)
         }
 
         func currentValue(configuration: TimerConfiguration) async throws -> Value {
             let isRunning = true // Check if the timer is running
-            return DayTimeLiveActivityControl.Value(isRunning: isRunning, name: configuration.timerName)
+            return DayTimeWidgetsControl.Value(isRunning: isRunning, name: configuration.timerName)
         }
     }
 }

@@ -6,6 +6,22 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C182671F2E259E0000AEEDEF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C18266A02E258F2700AEEDEF /* WidgetKit.framework */; };
+		C18267202E259E0000AEEDEF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C18266A22E258F2700AEEDEF /* SwiftUI.framework */; };
+		C18267312E259E0000AEEDEF /* DayTimeWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C182672F2E259E0000AEEDEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C182663D2E240F9500AEEDEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C182671D2E259E0000AEEDEF;
+			remoteInfo = DayTimeWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		C18266B92E258F2800AEEDEF /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -13,6 +29,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				C18267312E259E0000AEEDEF /* DayTimeWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -23,17 +40,42 @@
 		C18266452E240F9500AEEDEF /* DayTime.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DayTime.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C18266A02E258F2700AEEDEF /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C18266A22E258F2700AEEDEF /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DayTimeWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C18267322E259E0000AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTimeWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */;
+		};
+		C18267372E259E1900AEEDEF /* Exceptions for "DayTime" folder in "DayTimeWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				DayTimeActivityAttributes.swift,
+			);
+			target = C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C18266472E240F9500AEEDEF /* DayTime */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C18267372E259E1900AEEDEF /* Exceptions for "DayTime" folder in "DayTimeWidgetsExtension" target */,
+			);
 			path = DayTime;
 			sourceTree = "<group>";
 		};
-		C18266A42E258F2700AEEDEF /* DayTimeLiveActivity */ = {
+		C18267212E259E0000AEEDEF /* DayTimeWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = DayTimeLiveActivity;
+			exceptions = (
+				C18267322E259E0000AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTimeWidgetsExtension" target */,
+			);
+			path = DayTimeWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -46,6 +88,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C182671B2E259E0000AEEDEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C18267202E259E0000AEEDEF /* SwiftUI.framework in Frameworks */,
+				C182671F2E259E0000AEEDEF /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -53,7 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				C18266472E240F9500AEEDEF /* DayTime */,
-				C18266A42E258F2700AEEDEF /* DayTimeLiveActivity */,
+				C18267212E259E0000AEEDEF /* DayTimeWidgets */,
 				C182669F2E258F2700AEEDEF /* Frameworks */,
 				C18266462E240F9500AEEDEF /* Products */,
 			);
@@ -63,6 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				C18266452E240F9500AEEDEF /* DayTime.app */,
+				C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -91,6 +143,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				C18267302E259E0000AEEDEF /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C18266472E240F9500AEEDEF /* DayTime */,
@@ -101,6 +154,28 @@
 			productName = DayTime;
 			productReference = C18266452E240F9500AEEDEF /* DayTime.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C18267332E259E0000AEEDEF /* Build configuration list for PBXNativeTarget "DayTimeWidgetsExtension" */;
+			buildPhases = (
+				C182671A2E259E0000AEEDEF /* Sources */,
+				C182671B2E259E0000AEEDEF /* Frameworks */,
+				C182671C2E259E0000AEEDEF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C18267212E259E0000AEEDEF /* DayTimeWidgets */,
+			);
+			name = DayTimeWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = DayTimeWidgetsExtension;
+			productReference = C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -113,6 +188,9 @@
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					C18266442E240F9500AEEDEF = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					C182671D2E259E0000AEEDEF = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
@@ -132,12 +210,20 @@
 			projectRoot = "";
 			targets = (
 				C18266442E240F9500AEEDEF /* DayTime */,
+				C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C18266432E240F9500AEEDEF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C182671C2E259E0000AEEDEF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -154,7 +240,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C182671A2E259E0000AEEDEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C18267302E259E0000AEEDEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */;
+			targetProxy = C182672F2E259E0000AEEDEF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C18266502E240F9600AEEDEF /* Debug */ = {
@@ -294,7 +395,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "DayTime needs access to save your daily activity overview screenshots to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DayTime needs access to your photo library to save your daily activity overview screenshots.";
-				INFOPLIST_KEY_NSSupportsLiveActivities = NO;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -328,7 +429,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "DayTime needs access to save your daily activity overview screenshots to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DayTime needs access to your photo library to save your daily activity overview screenshots.";
-				INFOPLIST_KEY_NSSupportsLiveActivities = NO;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -342,6 +443,62 @@
 				PRODUCT_BUNDLE_IDENTIFIER = live.swipefeed.DayTime;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C18267342E259E0000AEEDEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D37CG5HJMJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DayTimeWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DayTimeWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = live.swipefeed.DayTime.DayTimeWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C18267352E259E0000AEEDEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D37CG5HJMJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DayTimeWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DayTimeWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = live.swipefeed.DayTime.DayTimeWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -365,6 +522,15 @@
 			buildConfigurations = (
 				C18266532E240F9600AEEDEF /* Debug */,
 				C18266542E240F9600AEEDEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C18267332E259E0000AEEDEF /* Build configuration list for PBXNativeTarget "DayTimeWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C18267342E259E0000AEEDEF /* Debug */,
+				C18267352E259E0000AEEDEF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -9,6 +9,7 @@ import Foundation
 import UserNotifications
 import SwiftUI
 import SwiftData
+import ActivityKit
 
 @Observable
 class TimerService {
@@ -40,6 +41,17 @@ class TimerService {
         if isRunning {
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             scheduleRepeatingNotifications()
+
+            // Update live activity
+            Task {
+                let nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
+                let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextCheckInDate)
+                let content = ActivityContent(state: contentState, staleDate: nextCheckInDate.addingTimeInterval(60))
+
+                for activity in Activity<DayTimeActivityAttributes>.activities {
+                    await activity.update(content)
+                }
+            }
         }
     }
     
@@ -48,6 +60,22 @@ class TimerService {
         currentSessionId = sessionId
         isRunning = true
         scheduleRepeatingNotifications()
+
+        // Start live activity
+        let attributes = DayTimeActivityAttributes()
+        let nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
+        let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextCheckInDate)
+        let content = ActivityContent(state: contentState, staleDate: nextCheckInDate.addingTimeInterval(60))
+
+        do {
+            _ = try Activity<DayTimeActivityAttributes>.request(
+                attributes: attributes,
+                content: content,
+                pushType: nil)
+        } catch (let error) {
+            print("Error starting live activity: \(error.localizedDescription)")
+        }
+
         return sessionId
     }
     
@@ -55,6 +83,13 @@ class TimerService {
         isRunning = false
         currentSessionId = nil
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+
+        // End all live activities
+        Task {
+            for activity in Activity<DayTimeActivityAttributes>.activities {
+                await activity.end(dismissalPolicy: .immediate)
+            }
+        }
     }
     
     private func scheduleRepeatingNotifications() {

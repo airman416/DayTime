@@ -1,6 +1,6 @@
 //
-//  DayTimeLiveActivityLiveActivity.swift
-//  DayTimeLiveActivity
+//  DayTimeWidgetsLiveActivity.swift
+//  DayTimeWidgets
 //
 //  Created by Armaan Agrawal on 7/14/25.
 //
@@ -9,7 +9,7 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct DayTimeLiveActivityAttributes: ActivityAttributes {
+struct DayTimeWidgetsAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         // Dynamic stateful properties about your activity go here!
         var emoji: String
@@ -19,9 +19,9 @@ struct DayTimeLiveActivityAttributes: ActivityAttributes {
     var name: String
 }
 
-struct DayTimeLiveActivityLiveActivity: Widget {
+struct DayTimeWidgetsLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: DayTimeLiveActivityAttributes.self) { context in
+        ActivityConfiguration(for: DayTimeWidgetsAttributes.self) { context in
             // Lock screen/banner UI goes here
             VStack {
                 Text("Hello \(context.state.emoji)")
@@ -56,25 +56,25 @@ struct DayTimeLiveActivityLiveActivity: Widget {
     }
 }
 
-extension DayTimeLiveActivityAttributes {
-    fileprivate static var preview: DayTimeLiveActivityAttributes {
-        DayTimeLiveActivityAttributes(name: "World")
+extension DayTimeWidgetsAttributes {
+    fileprivate static var preview: DayTimeWidgetsAttributes {
+        DayTimeWidgetsAttributes(name: "World")
     }
 }
 
-extension DayTimeLiveActivityAttributes.ContentState {
-    fileprivate static var smiley: DayTimeLiveActivityAttributes.ContentState {
-        DayTimeLiveActivityAttributes.ContentState(emoji: "😀")
+extension DayTimeWidgetsAttributes.ContentState {
+    fileprivate static var smiley: DayTimeWidgetsAttributes.ContentState {
+        DayTimeWidgetsAttributes.ContentState(emoji: "😀")
      }
      
-     fileprivate static var starEyes: DayTimeLiveActivityAttributes.ContentState {
-         DayTimeLiveActivityAttributes.ContentState(emoji: "🤩")
+     fileprivate static var starEyes: DayTimeWidgetsAttributes.ContentState {
+         DayTimeWidgetsAttributes.ContentState(emoji: "🤩")
      }
 }
 
-#Preview("Notification", as: .content, using: DayTimeLiveActivityAttributes.preview) {
-   DayTimeLiveActivityLiveActivity()
+#Preview("Notification", as: .content, using: DayTimeWidgetsAttributes.preview) {
+   DayTimeWidgetsLiveActivity()
 } contentStates: {
-    DayTimeLiveActivityAttributes.ContentState.smiley
-    DayTimeLiveActivityAttributes.ContentState.starEyes
+    DayTimeWidgetsAttributes.ContentState.smiley
+    DayTimeWidgetsAttributes.ContentState.starEyes
 }
