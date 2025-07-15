@@ -156,6 +156,7 @@ struct DashboardView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
         .fullScreenCover(isPresented: $showingAlarm) {
             ActivityInputView(
                 isPresented: $showingAlarm,

@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension Color {
-    // Hex Code: #FFDE34
-    // RGB: (255, 222, 52)
-    static let themeColor = Color(red: 255/255, green: 222/255, blue: 52/255)
+    // Hex Code: #FFC400
+    // RGB: (255, 196, 0)
+    static let themeColor = Color(red: 255/255, green: 196/255, blue: 0/255)
 }

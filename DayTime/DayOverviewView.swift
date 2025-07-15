@@ -14,9 +14,14 @@ struct DayOverviewView: View {
     @Query private var sessions: [TrackingSession]
     @Query private var settings: [UserSettings]
     @State private var selectedDate = Date()
+    @Environment(\.dismiss) private var dismiss
     @State private var showingEditSheet = false
     @State private var editingActivity: ActivityEntry?
     @State private var editText = ""
+    // Flag to ensure sample data is injected only once when needed (debug builds)
+    #if DEBUG
+    @State private var didPrefillSample = false
+    #endif
     
     private var userSettings: UserSettings? {
         settings.first
@@ -48,22 +53,19 @@ struct DayOverviewView: View {
     }
     
     var body: some View {
-        ScreenshotView(
-            userName: userSettings?.userName ?? "User",
-            selectedDate: selectedDate,
-            dayActivities: dayActivities,
-            totalProductiveTime: totalProductiveTime,
-            checkInCount: dayActivities.count,
-            userSettings: userSettings,
-            onEdit: { activity in
-                editingActivity = activity
-                editText = activity.activity
-                showingEditSheet = true
-            },
-            onDelete: { activity in
-                deleteActivity(activity)
+        GeometryReader { geometry in
+            // Fixed row height since entries will now scroll
+            let rowHeight: CGFloat = 60
+
+            VStack(spacing: 0) {
+                headerView
+
+                activitySection(rowHeight: rowHeight)
+
+                footerView
             }
-        )
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
         .sheet(isPresented: $showingEditSheet) {
             EditActivitySheet(
                 activity: editingActivity,
@@ -72,6 +74,116 @@ struct DayOverviewView: View {
                 onCancel: { showingEditSheet = false }
             )
         }
+        .navigationBarHidden(true)
+        #if DEBUG
+        .onAppear {
+            if !didPrefillSample {
+                prefillSampleData()
+                didPrefillSample = true
+            }
+        }
+        #endif
+    }
+
+    private var headerView: some View {
+        HStack(spacing: 8) {
+            // Custom Back Button
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(userSettings?.userName ?? "User")'s DayTime")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+
+                Text(selectedDate, style: .date)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack(spacing: 15) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("\(dayActivities.count)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.themeColor)
+                        Text("Check-ins")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(totalProductiveTime)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                        Text("Productive")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial)
+    }
+
+    @ViewBuilder
+    private func activitySection(rowHeight: CGFloat) -> some View {
+        if dayActivities.isEmpty {
+            VStack(spacing: 20) {
+                Spacer()
+                Image(systemName: "calendar.badge.exclamationmark")
+                    .font(.system(size: 40))
+                    .foregroundColor(.secondary)
+                Text("No activities recorded")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                Text("Start tracking your day to see your activities here")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                Spacer()
+            }
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(Array(dayActivities.enumerated()), id: \.element.id) { index, activity in
+                        EnhancedActivityRow(
+                            activity: activity,
+                            interval: userSettings?.timerInterval ?? 900,
+                            isLast: index == dayActivities.count - 1,
+                            rowHeight: rowHeight,
+                            onEdit: {
+                                editingActivity = activity
+                                editText = activity.activity
+                                showingEditSheet = true
+                            },
+                            onDelete: { deleteActivity(activity) }
+                        )
+                    }
+                }
+                .padding(.top, 16)
+                .padding(.bottom, 20)
+            }
+        }
+    }
+
+    private var footerView: some View {
+        HStack {
+            Spacer()
+            Text("Generated by DayTime")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial)
     }
     
     private func updateActivity() {
@@ -85,142 +197,90 @@ struct DayOverviewView: View {
         modelContext.delete(activity)
         try? modelContext.save()
     }
-    
 
+    #if DEBUG
+    private func prefillSampleData() {
+        guard dayActivities.isEmpty else { return }
+
+        let calendar = Calendar.current
+        let baseDate = calendar.startOfDay(for: selectedDate)
+        let timesAndDescriptions: [(Int, Int, String)] = [
+            (9, 0, "Morning planning and coffee. Reviewed to-do list."),
+            (9, 15, "Deep work: Finished writing product brief for new feature."),
+            (9, 30, "Quick stand-up meeting with the team. Shared updates."),
+            (9, 45, "Took a mini break. Did dishes and stretched a bit."),
+            (10, 0, "Coding session. Fixed a bug that's been annoying me for days."),
+            (10, 15, "Still coding. Got into a flow state with Lofi in the background."),
+            (10, 30, "Sent pull request. Reviewed two teammate PRs."),
+            (10, 45, "Scrolled Twitter for research and memes."),
+            (11, 0, "Cleaned up work desk. Felt messy."),
+            (11, 15, "Read a chapter from 'Show Your Work'. Taking notes."),
+            (11, 30, "Wrote draft for tomorrow's blog post."),
+            (11, 45, "Made a quick omelette and hydrated."),
+            (12, 0, "Walked outside for 10 minutes. Needed fresh air."),
+            (12, 15, "Replied to DMs and checked emails."),
+            (12, 30, "Short breathing exercise. Recentering."),
+            (12, 45, "Brainstorming new video ideas for TikTok.")
+        ]
+
+        // Create a tracking session for the sample entries
+        let session = TrackingSession(startTime: baseDate)
+        modelContext.insert(session)
+
+        for (hour, minute, description) in timesAndDescriptions {
+            var components = DateComponents()
+            components.hour = hour
+            components.minute = minute
+            if let timestamp = calendar.date(byAdding: components, to: baseDate) {
+                let entry = ActivityEntry(activity: description, sessionId: session.id, timestamp: timestamp)
+                modelContext.insert(entry)
+            }
+        }
+
+        try? modelContext.save()
+    }
+    #endif
 }
 
+// ScreenshotView is no longer needed; kept as a minimal placeholder
 struct ScreenshotView: View {
-    let userName: String
-    let selectedDate: Date
-    let dayActivities: [ActivityEntry]
-    let totalProductiveTime: String
-    let checkInCount: Int
-    let userSettings: UserSettings?
-    let onEdit: (ActivityEntry) -> Void
-    let onDelete: (ActivityEntry) -> Void
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header with stats
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(userName)'s DayTime")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                    
-                    Text(selectedDate, style: .date)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 8) {
-                    HStack(spacing: 15) {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(checkInCount)")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.themeColor)
-                            Text("Check-ins")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(totalProductiveTime)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.green)
-                            Text("Productive")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-            .padding()
-            .background(.ultraThinMaterial)
-            
-            // Activities list
-            if dayActivities.isEmpty {
-                VStack(spacing: 20) {
-                    Spacer()
-                    
-                    Image(systemName: "calendar.badge.exclamationmark")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
-                    
-                    Text("No activities recorded")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text("Start tracking your day to see your activities here")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    Spacer()
-                }
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(Array(dayActivities.enumerated()), id: \.element.id) { index, activity in
-                            EnhancedActivityRow(
-                                activity: activity,
-                                interval: userSettings?.timerInterval ?? 900,
-                                isLast: index == dayActivities.count - 1,
-                                onEdit: { onEdit(activity) },
-                                onDelete: { onDelete(activity) }
-                            )
-                        }
-                    }
-                    .padding(.top, 16)
-                    .padding(.bottom, 20)
-                }
-            }
-            
-            // Footer
-            HStack {
-                Spacer()
-                Text("Generated by DayTime")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
-        }
-        .background(Color(.systemBackground))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
+    var body: some View { EmptyView() }
 }
 
 struct EnhancedActivityRow: View {
     let activity: ActivityEntry
     let interval: Int
     let isLast: Bool
+    let rowHeight: CGFloat
     let onEdit: () -> Void
     let onDelete: () -> Void
     
     @State private var showingDeleteAlert = false
     
     var body: some View {
+        // Scale fonts relative to the current rowHeight (baseline = 60)
+        let scale = rowHeight / 60
+        let timeFont = max(10, 13 * scale)
+        let activityFont = max(11, 15 * scale)
+        let iconFont = max(11, 16 * scale)
+
         HStack(alignment: .center, spacing: 16) {
             // Time and visual indicator
             VStack(spacing: 6) {
                 Text(activity.timestamp, style: .time)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundColor(.themeColor)
+                    .font(.system(size: timeFont, weight: .bold, design: .rounded))
+                    .foregroundColor(.green)
             }
             .frame(width: 60)
+            
+            // Ensure the time text doesn't wrap
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
             
             // Activity text
             VStack(alignment: .leading, spacing: 2) {
                 Text(activity.activity)
-                    .font(.system(size: 15, weight: .medium, design: .default))
+                    .font(.system(size: activityFont, weight: .medium, design: .default))
                     .foregroundColor(.primary)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
@@ -233,7 +293,7 @@ struct EnhancedActivityRow: View {
                 // Edit button
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 16, weight: .regular))
+                        .font(.system(size: iconFont, weight: .regular))
                         .foregroundColor(.secondary)
                 }
                 
@@ -242,13 +302,13 @@ struct EnhancedActivityRow: View {
                     showingDeleteAlert = true
                 }) {
                     Image(systemName: "trash")
-                        .font(.system(size: 16, weight: .regular))
+                        .font(.system(size: iconFont, weight: .regular))
                         .foregroundColor(.secondary)
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 60)
+        .frame(height: rowHeight)
         .padding(.horizontal, 20)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -336,12 +396,14 @@ struct CompactActivityRow: View {
     let activity: ActivityEntry
     let interval: Int
     let isLast: Bool
+    let rowHeight: CGFloat = 60
     
     var body: some View {
         EnhancedActivityRow(
             activity: activity,
             interval: interval,
             isLast: isLast,
+            rowHeight: rowHeight,
             onEdit: {},
             onDelete: {}
         )
