@@ -42,12 +42,18 @@ struct SettingsView: View {
             }
             
             Section("About") {
+                Link("Privacy Policy", destination: URL(string: "https://swipefeed.live/daytime-policy")!)
+
                 HStack {
                     Text("Version")
                     Spacer()
                     Text("1.0.0")
                         .foregroundColor(.secondary)
                 }
+                
+                Text("Created with ❤️ by Armaan Agrawal at SwipeFeed LLC")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .navigationTitle("Settings")
