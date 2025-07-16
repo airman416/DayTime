@@ -16,6 +16,8 @@ struct ActivityInputView: View {
     let sessionId: UUID
     @Binding var activity: String
     @State private var activityText = ""
+    @State private var hasStartedTyping = false
+    @State private var didSubmit = false
     @FocusState private var isTextFieldFocused: Bool
     var onStopSession: (() -> Void)?
     
@@ -99,6 +101,17 @@ struct ActivityInputView: View {
                 isTextFieldFocused = true
             }
         }
+        .onChange(of: activityText) { oldValue, newValue in
+            if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !hasStartedTyping {
+                TimerService.shared.clearPendingNotifications()
+                hasStartedTyping = true
+            }
+        }
+        .onDisappear {
+            if !didSubmit && hasStartedTyping {
+                TimerService.shared.scheduleNags()
+            }
+        }
     }
     
     private func saveActivity() {
@@ -110,7 +123,9 @@ struct ActivityInputView: View {
         
         activity = activityText
         activityText = ""
+        didSubmit = true
         isPresented = false
+        TimerService.shared.scheduleCheckInAndNags()
     }
     
     private func saveActivityAndStop() {
@@ -120,6 +135,7 @@ struct ActivityInputView: View {
         )
         modelContext.insert(entry)
         
+        didSubmit = true
         onStopSession?()
         isPresented = false
     }

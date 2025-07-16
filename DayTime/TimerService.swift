@@ -19,6 +19,7 @@ class TimerService {
     var currentSessionId: UUID?
     var timerInterval: Int = 900 // 15 minutes in seconds
     var onAlarmTriggered: (() -> Void)?
+    var nextCheckInDate: Date?
     
     private init() {
         requestNotificationPermission()
@@ -39,17 +40,17 @@ class TimerService {
         
         // If a session is running, we need to reschedule
         if isRunning {
-            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-            scheduleRepeatingNotifications()
-
+            scheduleCheckInAndNags()
+            
             // Update live activity
             Task {
-                let nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
-                let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextCheckInDate)
-                let content = ActivityContent(state: contentState, staleDate: nextCheckInDate.addingTimeInterval(60))
-
-                for activity in Activity<DayTimeActivityAttributes>.activities {
-                    await activity.update(content)
+                if let nextCheckInDate = nextCheckInDate {
+                    let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextCheckInDate)
+                    let content = ActivityContent(state: contentState, staleDate: nextCheckInDate.addingTimeInterval(60))
+                    
+                    for activity in Activity<DayTimeActivityAttributes>.activities {
+                        await activity.update(content)
+                    }
                 }
             }
         }
@@ -59,13 +60,15 @@ class TimerService {
         let sessionId = UUID()
         currentSessionId = sessionId
         isRunning = true
-        scheduleRepeatingNotifications()
+        scheduleCheckInAndNags()
 
         // Start live activity
         let attributes = DayTimeActivityAttributes()
         let nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
         let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextCheckInDate)
         let content = ActivityContent(state: contentState, staleDate: nextCheckInDate.addingTimeInterval(60))
+        
+        self.nextCheckInDate = nextCheckInDate
 
         do {
             _ = try Activity<DayTimeActivityAttributes>.request(
@@ -83,6 +86,7 @@ class TimerService {
         isRunning = false
         currentSessionId = nil
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        nextCheckInDate = nil
 
         // End all live activities
         Task {
@@ -120,6 +124,84 @@ class TimerService {
                 if let error = error {
                     print("Error scheduling notification \(i): \(error)")
                 }
+            }
+        }
+    }
+    
+    func scheduleCheckInAndNags() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        
+        guard isRunning else { return }
+        
+        let content = UNMutableNotificationContent()
+        content.title = "🚨 DayTime Check-in!"
+        content.body = "Time to log your activity! What did you accomplish?"
+        content.categoryIdentifier = "DAYTIME_ALARM"
+        content.threadIdentifier = "daytime-checkin"
+        content.interruptionLevel = .timeSensitive
+        content.sound = UNNotificationSound.default
+        content.userInfo = ["sessionId": currentSessionId?.uuidString ?? ""]
+        
+        // Schedule regular
+        let regularTrigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(timerInterval), repeats: false)
+        let regularRequest = UNNotificationRequest(identifier: "dayTimeCheckIn_\(UUID().uuidString)", content: content, trigger: regularTrigger)
+        UNUserNotificationCenter.current().add(regularRequest) { error in
+            if let error = error {
+                print("Error scheduling regular notification: \(error)")
+            }
+        }
+        
+        // Schedule 60 nags
+        for i in 1...60 {
+            let nagTime = TimeInterval(timerInterval + i)
+            let nagTrigger = UNTimeIntervalNotificationTrigger(timeInterval: nagTime, repeats: false)
+            let nagRequest = UNNotificationRequest(identifier: "dayTimeNag_\(i)_\(UUID().uuidString)", content: content, trigger: nagTrigger)
+            UNUserNotificationCenter.current().add(nagRequest) { error in
+                if let error = error {
+                    print("Error scheduling nag \(i): \(error)")
+                }
+            }
+        }
+        
+        nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
+    }
+    
+    func clearPendingNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    }
+    
+    func scheduleNags() {
+        guard isRunning else { return }
+        
+        clearPendingNotifications()
+        
+        let content = UNMutableNotificationContent()
+        content.title = "🚨 DayTime Check-in!"
+        content.body = "Time to log your activity! What did you accomplish?"
+        content.categoryIdentifier = "DAYTIME_ALARM"
+        content.threadIdentifier = "daytime-checkin"
+        content.interruptionLevel = .timeSensitive
+        content.sound = UNNotificationSound.default
+        content.userInfo = ["sessionId": currentSessionId?.uuidString ?? ""]
+        
+        for i in 1...60 {
+            let nagTrigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(i), repeats: false)
+            let nagRequest = UNNotificationRequest(identifier: "dayTimeNag_\(i)_\(UUID().uuidString)", content: content, trigger: nagTrigger)
+            UNUserNotificationCenter.current().add(nagRequest) { error in
+                if let error = error {
+                    print("Error scheduling nag \(i): \(error)")
+                }
+            }
+        }
+        
+        nextCheckInDate = Date().addingTimeInterval(60)
+        
+        // Update live activity
+        Task {
+            let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextCheckInDate!)
+            let content = ActivityContent(state: contentState, staleDate: nextCheckInDate!.addingTimeInterval(60))
+            for activity in Activity<DayTimeActivityAttributes>.activities {
+                await activity.update(content)
             }
         }
     }

@@ -182,6 +182,18 @@ struct DashboardView: View {
                 // Ensure icon is solid when not active
                 iconOpacity = 1.0
             }
+            
+            // Check for overdue
+            if timerService.isRunning,
+               let nextDate = timerService.nextCheckInDate,
+               Date() > nextDate {
+                showingAlarm = true
+                UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+                    if requests.isEmpty {
+                        timerService.scheduleNags()
+                    }
+                }
+            }
         }
         .onDisappear {
             stopCountdownTimer()

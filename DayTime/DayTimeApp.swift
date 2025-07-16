@@ -64,12 +64,16 @@ class AppNotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Obser
     // This allows notifications to show even when app is in foreground
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         
-        // Show the alarm notification with sound even when app is open
-        completionHandler([.banner, .sound, .badge])
-        
-        // Also trigger the in-app alarm
-        DispatchQueue.main.async {
-            TimerService.shared.onAlarmTriggered?()
+        if notification.request.content.categoryIdentifier == "DAYTIME_ALARM" {
+            // Show the alarm notification with sound even when app is open
+            completionHandler([.banner, .sound, .badge])
+            
+            // Also trigger the in-app alarm
+            DispatchQueue.main.async {
+                TimerService.shared.onAlarmTriggered?()
+            }
+        } else {
+            completionHandler([])
         }
     }
     
