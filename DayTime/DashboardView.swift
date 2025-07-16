@@ -17,7 +17,6 @@ struct DashboardView: View {
     @State private var showingAlarm = false
     @State private var currentActivity = ""
     @State private var isSessionActive = false
-    @State private var lastNotificationTime: Date?
     @State private var countdownTimer: Timer?
     @State private var timeRemaining: Int = 0
     @State private var iconOpacity: Double = 1.0
@@ -183,6 +182,9 @@ struct DashboardView: View {
                 iconOpacity = 1.0
             }
             
+            // Sync live activity
+            timerService.syncLiveActivity()
+
             // Check for overdue
             if timerService.isRunning,
                let nextDate = timerService.nextCheckInDate,
@@ -225,7 +227,6 @@ struct DashboardView: View {
             iconOpacity = 0.3
         }
         
-        lastNotificationTime = Date()
         startCountdownTimer()
     }
     
@@ -245,7 +246,6 @@ struct DashboardView: View {
             iconOpacity = 1.0
         }
         
-        lastNotificationTime = nil
         stopCountdownTimer()
     }
     
@@ -265,23 +265,11 @@ struct DashboardView: View {
     }
     
     private func updateTimeRemaining() {
-        guard let session = activeSession else {
+        if let nextDate = timerService.nextCheckInDate {
+            let remaining = Int(nextDate.timeIntervalSinceNow)
+            timeRemaining = max(0, remaining)
+        } else {
             timeRemaining = 0
-            return
-        }
-        
-        let sessionStartTime = lastNotificationTime ?? session.startTime
-        let elapsed = Int(Date().timeIntervalSince(sessionStartTime))
-        let interval = timerService.timerInterval
-        
-        // Calculate time remaining until next notification
-        let timeUntilNext = interval - (elapsed % interval)
-        timeRemaining = timeUntilNext
-        
-        // Reset when alarm should trigger
-        if timeRemaining <= 0 {
-            lastNotificationTime = Date()
-            timeRemaining = interval
         }
     }
     
@@ -294,7 +282,6 @@ struct DashboardView: View {
     private func setupAlarmHandling() {
         timerService.onAlarmTriggered = {
             showingAlarm = true
-            lastNotificationTime = Date()
         }
     }
     

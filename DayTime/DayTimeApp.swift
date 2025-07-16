@@ -65,6 +65,10 @@ class AppNotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Obser
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         
         if notification.request.content.categoryIdentifier == "DAYTIME_ALARM" {
+            if TimerService.shared.isInputPresented {
+                completionHandler([])
+                return
+            }
             // Show the alarm notification with sound even when app is open
             completionHandler([.banner, .sound, .badge])
             
