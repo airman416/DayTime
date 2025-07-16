@@ -116,10 +116,12 @@ struct ActivityInputView: View {
         .onChange(of: activityText) { oldValue, newValue in
             if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !hasStartedTyping {
                 TimerService.shared.clearPendingNotifications()
+                UNUserNotificationCenter.current().removeAllDeliveredNotifications()
                 hasStartedTyping = true
             }
             if nagsScheduledDueToBackground {
                 TimerService.shared.clearPendingNotifications()
+                UNUserNotificationCenter.current().removeAllDeliveredNotifications()
                 nagsScheduledDueToBackground = false
             }
         }
