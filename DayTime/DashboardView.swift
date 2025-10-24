@@ -16,7 +16,6 @@ struct DashboardView: View {
     @State private var timerService = TimerService.shared
     @State private var showingAlarm = false
     @State private var currentActivity = ""
-    @State private var isSessionActive = false
     @State private var countdownTimer: Timer?
     @State private var timeRemaining: Int = 0
     @State private var iconOpacity: Double = 1.0
@@ -47,31 +46,32 @@ struct DashboardView: View {
                 
                 // Session status
                 VStack(spacing: 20) {
-                    if isSessionActive {
+                    if timerService.isRunning {
                         VStack(spacing: 15) {
                             Image("clocky")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 80, height: 80)
-                                .foregroundStyle(.green.gradient)
-                                .opacity(iconOpacity)
+                                .foregroundStyle(timerService.isPaused ? .orange : .green)
+                                .opacity(timerService.isPaused ? 1.0 : iconOpacity)
                             
-                            Text("Session Active")
+                            Text(timerService.isPaused ? "Session Paused" : "Session Active")
                                 .font(.title2)
                                 .fontWeight(.semibold)
+                                .foregroundStyle(timerService.isPaused ? .orange : .primary)
                             
                             // Countdown Timer
                             VStack(spacing: 5) {
-                                Text("Next check-in in:")
+                                Text(timerService.isPaused ? "Time remaining:" : "Next check-in in:")
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                                 
                                 Text(formatCountdown(timeRemaining))
                                     .font(.system(size: 24, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(.green.gradient)
+                                    .foregroundStyle(timerService.isPaused ? .orange : .green)
                             }
                             
-                            Text("Clocky will check in with you every \(formatTimerInterval(timerService.timerInterval))")
+                            Text(timerService.isPaused ? "Session is paused. Tap Resume to continue." : "Clocky will check in with you every \(formatTimerInterval(timerService.timerInterval))")
                                 .font(.body)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -100,9 +100,47 @@ struct DashboardView: View {
                 
                 // Action buttons
                 VStack(spacing: 15) {
-                    if isSessionActive {
-                        Button(action: stopSession) {
-                            Text("Stop Session")
+                    if timerService.isRunning {
+                        HStack(spacing: 10) {
+                            if timerService.isPaused {
+                                Button(action: {
+                                    timerService.resumeSession()
+                                }) {
+                                    HStack {
+                                        Image(systemName: "play.fill")
+                                        Text("Resume")
+                                    }
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.themeColor.gradient)
+                                    .cornerRadius(12)
+                                }
+                            } else {
+                                Button(action: {
+                                    timerService.pauseSession()
+                                }) {
+                                    HStack {
+                                        Image(systemName: "pause.fill")
+                                        Text("Pause")
+                                    }
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.themeColor.gradient)
+                                    .cornerRadius(12)
+                                }
+                            }
+                            
+                            Button(action: stopSession) {
+                                HStack {
+                                    Image(systemName: "stop.fill")
+                                    Text("Stop")
+                                }
                                 .font(.title3)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
@@ -110,6 +148,7 @@ struct DashboardView: View {
                                 .padding()
                                 .background(.red.gradient)
                                 .cornerRadius(12)
+                            }
                         }
                     } else {
                         Button(action: startSession) {
@@ -181,13 +220,13 @@ struct DashboardView: View {
             )
         }
         .onAppear {
-            isSessionActive = activeSession != nil
+            timerService.isRunning = activeSession != nil
             if let settings = userSettings {
                 timerService.updateTimerInterval(settings.timerInterval)
             }
             setupAlarmHandling()
             
-            if isSessionActive {
+            if timerService.isRunning {
                 startCountdownTimer()
                 // Start flashing animation for existing active session
                 withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
@@ -198,9 +237,9 @@ struct DashboardView: View {
                 iconOpacity = 1.0
             }
             
-            // Sync live activity
+            // Sync countdown Live Activity
             timerService.syncLiveActivity()
-
+            
             // Check for overdue - now handled by AlarmKit
             if timerService.isRunning,
                let nextDate = timerService.nextCheckInDate,
@@ -229,10 +268,6 @@ struct DashboardView: View {
             modelContext.insert(startTrackingActivity)
         }
         
-        withAnimation(.spring()) {
-            isSessionActive = true
-        }
-        
         // Start the flashing animation
         withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
             iconOpacity = 0.3
@@ -246,10 +281,6 @@ struct DashboardView: View {
         
         if let session = activeSession {
             session.stop()
-        }
-        
-        withAnimation(.spring()) {
-            isSessionActive = false
         }
         
         // Stop the flashing animation and return to solid
@@ -276,7 +307,10 @@ struct DashboardView: View {
     }
     
     private func updateTimeRemaining() {
-        if let nextDate = timerService.nextCheckInDate {
+        // If paused, show the paused time remaining
+        if timerService.isPaused, let pausedTime = timerService.pausedTimeRemaining {
+            timeRemaining = max(0, Int(pausedTime))
+        } else if let nextDate = timerService.nextCheckInDate {
             let remaining = Int(nextDate.timeIntervalSinceNow)
             timeRemaining = max(0, remaining)
         } else {

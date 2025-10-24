@@ -10,33 +10,101 @@ import SwiftUI
 import SwiftData
 import ActivityKit
 
+// Notification names for widget actions
+extension Notification.Name {
+    static let pauseSession = Notification.Name("pauseSession")
+    static let stopSession = Notification.Name("stopSession")
+}
+
 @Observable
 class TimerService {
     static let shared = TimerService()
     
     var isRunning = false
+    var isPaused = false
     var currentSessionId: UUID?
     var timerInterval: Int = 900 // 15 minutes in seconds
     var onAlarmTriggered: (() -> Void)?
     var nextCheckInDate: Date?
+    var pausedTimeRemaining: TimeInterval?
     var isInputPresented = false
     
+    private var liveActivityUpdateTimer: Timer? = nil
+    
     private init() {
-        // Initialization
+        // Setup notification observers for widget actions
+        setupNotificationObservers()
     }
     
+    private func setupNotificationObservers() {
+        // Listen for Darwin notifications from widget extension
+        let pauseCallback: CFNotificationCallback = { _, observer, name, _, _ in
+            DispatchQueue.main.async {
+                TimerService.shared.pauseSession()
+            }
+        }
+        
+        let stopCallback: CFNotificationCallback = { _, observer, name, _, _ in
+            DispatchQueue.main.async {
+                TimerService.shared.stopSession()
+            }
+        }
+        
+        let resumeCallback: CFNotificationCallback = { _, observer, name, _, _ in
+            DispatchQueue.main.async {
+                TimerService.shared.resumeSession()
+            }
+        }
+        
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            pauseCallback,
+            "com.daytime.pauseSession" as CFString,
+            nil,
+            .deliverImmediately
+        )
+        
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            stopCallback,
+            "com.daytime.stopSession" as CFString,
+            nil,
+            .deliverImmediately
+        )
+        
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            resumeCallback,
+            "com.daytime.resumeSession" as CFString,
+            nil,
+            .deliverImmediately
+        )
+    }
+    
+    // Sync countdown Live Activity (separate from AlarmKit alarm)
     func syncLiveActivity() {
         Task {
             let activities = Activity<DayTimeActivityAttributes>.activities
-            guard isRunning, let nextDate = nextCheckInDate else {
+            
+            // End Live Activity if not running at all
+            guard isRunning else {
                 for activity in activities {
                     await activity.end(dismissalPolicy: .immediate)
                 }
                 return
             }
-
-            let contentState = DayTimeActivityAttributes.ContentState(nextCheckInTime: nextDate)
-            let content = ActivityContent(state: contentState, staleDate: nextDate.addingTimeInterval(60))
+            
+            // Create content state - includes paused state
+            let nextDate = nextCheckInDate ?? Date()
+            let contentState = DayTimeActivityAttributes.ContentState(
+                nextCheckInTime: nextDate,
+                isPaused: isPaused,
+                pausedTimeRemaining: pausedTimeRemaining
+            )
+            let content = ActivityContent(state: contentState, staleDate: nil)
 
             if activities.isEmpty {
                 let attributes = DayTimeActivityAttributes()
@@ -71,20 +139,69 @@ class TimerService {
         currentSessionId = sessionId
         isRunning = true
         scheduleCheckInAndNags()
+        liveActivityUpdateTimer?.invalidate()
+        liveActivityUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.syncLiveActivity()
+        }
         return sessionId
+    }
+    
+    func pauseSession() {
+        guard isRunning && !isPaused else { return }
+        
+        isPaused = true
+        
+        // Calculate time remaining
+        if let nextDate = nextCheckInDate {
+            pausedTimeRemaining = nextDate.timeIntervalSinceNow
+        }
+        
+        // Cancel the alarm
+        Task { @MainActor in
+            try? AlarmKitService.shared.cancelCurrentAlarm()
+        }
+        
+        // Update the Live Activity to show paused state
+        syncLiveActivity()
+        liveActivityUpdateTimer?.invalidate()
+        liveActivityUpdateTimer = nil
+    }
+    
+    func resumeSession() {
+        guard isRunning && isPaused else { return }
+        
+        isPaused = false
+        
+        // Reschedule with remaining time
+        if let remaining = pausedTimeRemaining, remaining > 0 {
+            nextCheckInDate = Date().addingTimeInterval(remaining)
+            scheduleAlarm()
+            syncLiveActivity()
+        }
+        
+        pausedTimeRemaining = nil
+        liveActivityUpdateTimer?.invalidate()
+        liveActivityUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.syncLiveActivity()
+        }
     }
     
     func stopSession() {
         isRunning = false
+        isPaused = false
         currentSessionId = nil
         nextCheckInDate = nil
+        pausedTimeRemaining = nil
         
         // Cancel AlarmKit alarm
         Task { @MainActor in
             try? AlarmKitService.shared.cancelCurrentAlarm()
         }
         
+        // End countdown Live Activity
         syncLiveActivity()
+        liveActivityUpdateTimer?.invalidate()
+        liveActivityUpdateTimer = nil
     }
     
     private func scheduleAlarm() {
@@ -106,6 +223,7 @@ class TimerService {
         guard isRunning else { return }
         nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
         scheduleAlarm()
+        // Update countdown Live Activity (separate from alarm)
         syncLiveActivity()
     }
 }

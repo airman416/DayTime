@@ -98,10 +98,8 @@ struct ActivityInputView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .onAppear {
-            // Silence the ringing alarm immediately when app opens
-            if let alarmId = TimerService.shared.currentSessionId {
-                try? AlarmKitService.shared.silenceAlarm(alarmID: alarmId)
-            }
+            // The alarm is already silenced by UpdateClockyIntent
+            // Just focus the text field and mark input as presented
             
             // Auto-focus the text field when the view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

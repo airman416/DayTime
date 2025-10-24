@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C15359E72EAC0D0B00D7E3FE /* AlarmKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C15359E62EAC0D0B00D7E3FE /* AlarmKit.framework */; };
+		C15359E82EAC0D1000D7E3FE /* AlarmKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C15359E62EAC0D0B00D7E3FE /* AlarmKit.framework */; };
 		C182671F2E259E0000AEEDEF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C18266A02E258F2700AEEDEF /* WidgetKit.framework */; };
 		C18267202E259E0000AEEDEF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C18266A22E258F2700AEEDEF /* SwiftUI.framework */; };
 		C18267312E259E0000AEEDEF /* DayTimeWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -37,6 +39,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C15359E62EAC0D0B00D7E3FE /* AlarmKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AlarmKit.framework; path = System/Library/Frameworks/AlarmKit.framework; sourceTree = SDKROOT; };
 		C18266452E240F9500AEEDEF /* DayTime.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DayTime.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C18266A02E258F2700AEEDEF /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C18266A22E258F2700AEEDEF /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -44,6 +47,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C1535ACE2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTime" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AlarmIntents.swift,
+				AlarmMetadata.swift,
+			);
+			target = C18266442E240F9500AEEDEF /* DayTime */;
+		};
+		C1535ACF2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTimeWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AlarmIntents.swift,
+				AlarmMetadata.swift,
+			);
+			target = C182671D2E259E0000AEEDEF /* DayTimeWidgetsExtension */;
+		};
 		C18267322E259E0000AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTimeWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -75,6 +94,15 @@
 			path = DayTimeWidgets;
 			sourceTree = "<group>";
 		};
+		C18267FF2E25FF0000AEEDEF /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C1535ACE2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTime" target */,
+				C1535ACF2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTimeWidgetsExtension" target */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +110,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C15359E82EAC0D1000D7E3FE /* AlarmKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +118,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C15359E72EAC0D0B00D7E3FE /* AlarmKit.framework in Frameworks */,
 				C18267202E259E0000AEEDEF /* SwiftUI.framework in Frameworks */,
 				C182671F2E259E0000AEEDEF /* WidgetKit.framework in Frameworks */,
 			);
@@ -102,6 +132,7 @@
 			children = (
 				C18266472E240F9500AEEDEF /* DayTime */,
 				C18267212E259E0000AEEDEF /* DayTimeWidgets */,
+				C18267FF2E25FF0000AEEDEF /* Shared */,
 				C182669F2E258F2700AEEDEF /* Frameworks */,
 				C18266462E240F9500AEEDEF /* Products */,
 			);
@@ -119,6 +150,7 @@
 		C182669F2E258F2700AEEDEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C15359E62EAC0D0B00D7E3FE /* AlarmKit.framework */,
 				C18266A02E258F2700AEEDEF /* WidgetKit.framework */,
 				C18266A22E258F2700AEEDEF /* SwiftUI.framework */,
 			);

@@ -12,7 +12,7 @@ actor GeminiService {
     
     // TODO: Add your Gemini API key here
     private let apiKey: String = "AIzaSyDrOR6r0tvPrJw5-hQvsjB2Q8zEIsRSoEs"
-    private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     
     struct DaySummary {
         let shareableOverview: String
