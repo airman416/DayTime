@@ -1,0 +1,410 @@
+# Visual Guide - AI Summary Feature
+
+## 🎨 What Users Will See
+
+### Screen 1: Dashboard (Updated)
+
+```
+┌─────────────────────────────────────┐
+│ ← DayTime                    ⚙️      │
+├─────────────────────────────────────┤
+│                                     │
+│    Hello, [Name]! 👋                │
+│    Ready to track your productive   │
+│    day?                             │
+│                                     │
+│         🕐 Clocky Icon              │
+│         (theme yellow)              │
+│                                     │
+│      Ready to Begin / Active        │
+│                                     │
+│                                     │
+│  ┌───────────────────────────────┐ │
+│  │    Start Tracking / Stop      │ │
+│  └───────────────────────────────┘ │
+│                                     │
+│  ┌─────────────┬────────────────┐  │
+│  │View Calendar│  Day Overview  │  │
+│  └─────────────┴────────────────┘  │
+│                                     │
+│  ┌───────────────────────────────┐ │
+│  │  🕐  See Summary            │ │← NEW!
+│  └───────────────────────────────┘ │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Key Changes:**
+- New "See Summary" button added
+- Horizontally centered
+- Includes Clocky icon
+- Theme yellow color
+- Below existing navigation buttons
+
+---
+
+### Screen 2: Settings (Updated)
+
+```
+┌─────────────────────────────────────┐
+│ ← Settings                          │
+├─────────────────────────────────────┤
+│                                     │
+│ PERSONAL                            │
+│  Name              [Your name]      │
+│                                     │
+│ TIMER SETTINGS                      │
+│  Check-in Interval   15 minutes ›   │
+│                                     │
+│ AI SUMMARY                          │← NEW!
+│  Gemini API Key        ℹ️           │
+│  [••••••••••••••••••••]             │
+│  ✓ API Key Set                      │
+│                                     │
+│  Required for AI-generated day      │
+│  summaries. Your API key is stored  │
+│  securely on your device.           │
+│                                     │
+│ ABOUT                               │
+│  Privacy Policy                  ›  │
+│  Version               1.0.0        │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Key Changes:**
+- New "AI Summary" section
+- SecureField for API key (masked)
+- Info button with instructions
+- Visual confirmation when set
+- Privacy notice
+
+---
+
+### Screen 3: Loading State (New)
+
+```
+┌─────────────────────────────────────┐
+│ ← Day Summary              🕐       │
+│    By Clocky                        │
+├─────────────────────────────────────┤
+│                                     │
+│                                     │
+│         🕐 (Rotating)               │
+│         Clocky Icon                 │
+│         (360° animation)            │
+│                                     │
+│                                     │
+│   Clocky is seeing what you         │
+│   did today...                      │
+│                                     │
+│   Analyzing your activities and     │
+│   productivity patterns             │
+│                                     │
+│                                     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Animation:**
+- Clocky rotates continuously
+- Smooth, 2-second rotation cycle
+- Theme yellow gradient
+
+---
+
+### Screen 4: Summary View (New)
+
+```
+┌─────────────────────────────────────┐
+│ ← Day Summary              🕐       │
+│    By Clocky                        │
+├─────────────────────────────────────┤
+│ ┌─────────────────────────────────┐ │
+│ │ 🕐 Today's Highlight            │ │
+│ │                                 │ │
+│ │ ┌─────────────────────────────┐ │ │
+│ │ │ [Shareable Overview]        │ │ │
+│ │ │                             │ │ │
+│ │ │ You had a productive day!   │ │ │
+│ │ │ Completed 12 check-ins over │ │ │
+│ │ │ 6 hours of focused work.    │ │ │
+│ │ │                             │ │ │← Yellow
+│ │ └─────────────────────────────┘ │ │  Background
+│ │                                 │ │
+│ │ ┌─────────────────────────────┐ │ │
+│ │ │ ↗️  Share Your Progress     │ │ │
+│ │ └─────────────────────────────┘ │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 💡 Personal Insights       🔒  │ │
+│ │                                 │ │
+│ │ What You Did Well:              │ │
+│ │ • Great focus in the morning... │ │
+│ │                                 │ │
+│ │ Time Analysis:                  │ │
+│ │ • Most time: Deep work (45%)... │ │
+│ │                                 │ │
+│ │ Efficiency Tips:                │ │
+│ │ • Consider batching meetings... │ │
+│ │                                 │ │
+│ │ Keep it up! 🌟 See you...       │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ Generated by Clocky at 6:32 PM      │
+│      🔄 Regenerate Summary          │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Layout:**
+- **Shareable Section**: Yellow highlight, share button
+- **Private Section**: Lock icon, detailed insights
+- **Footer**: Timestamp and regenerate option
+
+---
+
+### Screen 5: Share Sheet (New)
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│      Share Your Progress            │
+│                                     │
+│  ┌───┐  ┌───┐  ┌───┐  ┌───┐       │
+│  │MSG│  │TWT│  │IGs│  │FB │       │
+│  └───┘  └───┘  └───┘  └───┘       │
+│                                     │
+│  ┌───┐  ┌───┐  ┌───┐  ┌───┐       │
+│  │CPY│  │TXT│  │EML│  │···│       │
+│  └───┘  └───┘  └───┘  └───┘       │
+│                                     │
+│  Preview:                           │
+│  ┌─────────────────────────────────┐│
+│  │ You had a productive day!       ││
+│  │ Completed 12 check-ins over     ││
+│  │ 6 hours of focused work.        ││
+│  │                                 ││
+│  │ Generated by Clocky, John's     ││
+│  │ check-in partner, on the        ││
+│  │ DayTime app 🕐✨                ││
+│  └─────────────────────────────────┘│
+│                                     │
+│         [Cancel]                    │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Share Text Format:**
+```
+[Shareable Overview]
+
+Generated by Clocky, [User Name]'s check-in partner, on the DayTime app 🕐✨
+```
+
+---
+
+## 🎬 User Flow Animation
+
+### Step-by-Step Journey
+
+1. **User Opens Dashboard**
+   ```
+   Sees new "See Summary" button
+   ↓
+   ```
+
+2. **Taps "See Summary"**
+   ```
+   Navigation to DaySummaryView
+   ↓
+   ```
+
+3. **Initial State (First Time)**
+   ```
+   ┌─────────────────────────┐
+   │   🕐 Ready to see your  │
+   │      day?               │
+   │                         │
+   │   [Generate Summary]    │
+   └─────────────────────────┘
+   ↓
+   ```
+
+4. **Loading (2-5 seconds)**
+   ```
+   ┌─────────────────────────┐
+   │   🕐 (Rotating)         │
+   │                         │
+   │   Clocky is seeing...   │
+   └─────────────────────────┘
+   ↓
+   ```
+
+5. **Summary Displayed**
+   ```
+   ┌─────────────────────────┐
+   │   📝 Shareable Overview │
+   │   [Yellow Background]   │
+   │   [Share Button]        │
+   │                         │
+   │   💡 Personal Insights  │
+   │   [Detailed Analysis]   │
+   └─────────────────────────┘
+   ↓
+   ```
+
+6. **User Shares (Optional)**
+   ```
+   Taps "Share Your Progress"
+   ↓
+   iOS Share Sheet Opens
+   ↓
+   Selects Platform
+   ↓
+   Posts with Attribution
+   ```
+
+---
+
+## 🎨 Color Scheme
+
+- **Primary**: Theme Yellow `#FFC400` (RGB: 255, 196, 0)
+- **Accent**: Green for success states
+- **Background**: System background with `.ultraThinMaterial`
+- **Text**: System primary/secondary
+- **Highlight**: Yellow with 0.1 opacity
+
+---
+
+## 🔤 Typography
+
+- **Headers**: `.title2` or `.title3`, bold
+- **Body**: `.body` with 6pt line spacing
+- **Captions**: `.caption` or `.caption2`
+- **Buttons**: `.headline` or `.title3`
+
+---
+
+## ⚡ Animations
+
+### Loading
+- Clocky icon rotates 360°
+- Duration: 2 seconds
+- Repeat: Forever
+- Timing: Linear
+
+### Transitions
+- Navigation: Standard push/pop
+- Content: Fade in
+- Buttons: Standard tap animation
+
+---
+
+## 📱 Responsive Design
+
+### iPhone SE
+- Smaller Clocky icon (80pt → 60pt)
+- Reduced padding
+- Scrollable content
+
+### iPhone Pro Max
+- Standard layout
+- More breathing room
+- Larger touch targets
+
+### iPad (Future)
+- Side-by-side layout option
+- Larger Clocky animations
+- Multi-column insights
+
+---
+
+## ♿ Accessibility
+
+### VoiceOver Support
+- All buttons labeled
+- Summary content readable
+- Share sheet accessible
+- Loading state announced
+
+### Dynamic Type
+- All text scales
+- Maintains readability
+- Preserves layout
+
+### Color Contrast
+- WCAG AA compliant
+- Works in light/dark mode
+- Clear visual hierarchy
+
+---
+
+## 🎯 Key Visual Elements
+
+### Clocky Icon Usage
+1. **Dashboard Button**: 20x20pt
+2. **Loading Animation**: 100x100pt, rotating
+3. **Header**: 40x40pt, static
+4. **Throughout**: Theme yellow gradient
+
+### Material Effects
+- `.ultraThinMaterial` for cards
+- Subtle shadows for depth
+- Rounded corners (12-16pt radius)
+- Consistent padding (16-20pt)
+
+### Button Styles
+- **Primary**: Yellow background, white text
+- **Secondary**: Yellow text, clear background
+- **Share**: Yellow gradient background
+- **Info**: System blue, small
+
+---
+
+## 💬 Sample Summary Output
+
+### Shareable Overview (2-3 sentences)
+```
+"You crushed it today! 💪 With 15 check-ins across 7 hours, 
+you stayed focused on deep work and planning. Your morning 
+session was especially productive!"
+```
+
+### Personal Insights (Detailed)
+```
+What You Did Well 🌟
+You maintained excellent focus during your morning deep work 
+session (9-11 AM). Your consistent 15-minute check-ins show 
+great discipline!
+
+Time Analysis ⏰
+• Deep work: 45% of your time
+• Meetings: 20%
+• Planning: 15%
+• Breaks: 10%
+• Admin: 10%
+
+Efficiency Tips 💡
+1. Consider grouping your meetings together to maintain 
+   longer focus blocks
+2. Your afternoon had more context switching - try 
+   protecting 2-hour blocks
+3. Great job taking breaks! Keep this up for sustainability
+
+Opportunities 🎯
+I noticed fewer check-ins after 3 PM. Evening tracking 
+could give you even better insights!
+
+Keep up the amazing work! Come back tomorrow and let's 
+see what you accomplish next! 🚀
+```
+
+---
+
+**Need more visual guidance?** Check out:
+- `QUICK_START.md` for testing steps
+- `AI_SUMMARY_FEATURE.md` for full documentation
+- `IMPLEMENTATION_SUMMARY.md` for technical details
+

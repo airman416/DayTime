@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import UserNotifications
 import SwiftUI
 import SwiftData
 import ActivityKit
@@ -23,17 +22,7 @@ class TimerService {
     var isInputPresented = false
     
     private init() {
-        requestNotificationPermission()
-    }
-    
-    func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
-                print("Notification permission granted")
-            } else {
-                print("Notification permission denied")
-            }
-        }
+        // Initialization
     }
     
     func syncLiveActivity() {
@@ -88,45 +77,27 @@ class TimerService {
     func stopSession() {
         isRunning = false
         currentSessionId = nil
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         nextCheckInDate = nil
+        
+        // Cancel AlarmKit alarm
+        Task { @MainActor in
+            try? AlarmKitService.shared.cancelCurrentAlarm()
+        }
+        
         syncLiveActivity()
     }
     
-    private func scheduleNotifications() {
-        guard isRunning, let nextDate = nextCheckInDate else { return }
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-
-        let timeIntervalToNext = max(1, nextDate.timeIntervalSinceNow)
-
-        let content = UNMutableNotificationContent()
-        content.title = "🚨 DayTime Check-in!"
-        content.body = "Time to log your activity! What did you accomplish?"
-        content.categoryIdentifier = "DAYTIME_ALARM"
-        content.threadIdentifier = "daytime-checkin"
-        content.interruptionLevel = .timeSensitive
-        content.sound = UNNotificationSound.default
-        content.userInfo = ["sessionId": currentSessionId?.uuidString ?? ""]
-
-        // Schedule regular
-        let regularTrigger = UNTimeIntervalNotificationTrigger(timeInterval: timeIntervalToNext, repeats: false)
-        let regularRequest = UNNotificationRequest(identifier: "dayTimeCheckIn_\(UUID().uuidString)", content: content, trigger: regularTrigger)
-        UNUserNotificationCenter.current().add(regularRequest) { error in
-            if let error = error {
-                print("Error scheduling regular notification: \(error)")
-            }
-        }
-
-        // Schedule 60 nags
-        for i in 1...60 {
-            let nagTime = timeIntervalToNext + Double(i)
-            if nagTime < 1 { continue }
-            let nagTrigger = UNTimeIntervalNotificationTrigger(timeInterval: nagTime, repeats: false)
-            let nagRequest = UNNotificationRequest(identifier: "dayTimeNag_\(i)_\(UUID().uuidString)", content: content, trigger: nagTrigger)
-            UNUserNotificationCenter.current().add(nagRequest) { error in
-                if let error = error {
-                    print("Error scheduling nag \(i): \(error)")
-                }
+    private func scheduleAlarm() {
+        guard isRunning, let sessionId = currentSessionId else { return }
+        
+        Task {
+            do {
+                try await AlarmKitService.shared.scheduleCheckInAlarm(
+                    intervalSeconds: timerInterval,
+                    sessionId: sessionId
+                )
+            } catch {
+                print("❌ Failed to schedule alarm: \(error)")
             }
         }
     }
@@ -134,38 +105,7 @@ class TimerService {
     func scheduleCheckInAndNags() {
         guard isRunning else { return }
         nextCheckInDate = Date().addingTimeInterval(TimeInterval(timerInterval))
-        scheduleNotifications()
-        syncLiveActivity()
-    }
-    
-    func clearPendingNotifications() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-    }
-    
-    func scheduleNags() {
-        guard isRunning else { return }
-        clearPendingNotifications()
-
-        let content = UNMutableNotificationContent()
-        content.title = "🚨 DayTime Check-in!"
-        content.body = "Time to log your activity! What did you accomplish?"
-        content.categoryIdentifier = "DAYTIME_ALARM"
-        content.threadIdentifier = "daytime-checkin"
-        content.interruptionLevel = .timeSensitive
-        content.sound = UNNotificationSound.default
-        content.userInfo = ["sessionId": currentSessionId?.uuidString ?? ""]
-
-        for i in 1...60 {
-            let nagTrigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(i), repeats: false)
-            let nagRequest = UNNotificationRequest(identifier: "dayTimeNag_\(i)_\(UUID().uuidString)", content: content, trigger: nagTrigger)
-            UNUserNotificationCenter.current().add(nagRequest) { error in
-                if let error = error {
-                    print("Error scheduling nag \(i): \(error)")
-                }
-            }
-        }
-
-        nextCheckInDate = Date().addingTimeInterval(60)
+        scheduleAlarm()
         syncLiveActivity()
     }
 }

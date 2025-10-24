@@ -96,39 +96,25 @@ struct ActivityInputView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden()
             .ignoresSafeArea(.keyboard, edges: .bottom)
-            .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .background {
-                    if !didSubmit && hasStartedTyping {
-                        TimerService.shared.scheduleNags()
-                        nagsScheduledDueToBackground = true
-                    }
-                }
-            }
         }
         .onAppear {
+            // Silence the ringing alarm immediately when app opens
+            if let alarmId = TimerService.shared.currentSessionId {
+                try? AlarmKitService.shared.silenceAlarm(alarmID: alarmId)
+            }
+            
             // Auto-focus the text field when the view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isTextFieldFocused = true
             }
             TimerService.shared.isInputPresented = true
-            UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         }
         .onChange(of: activityText) { oldValue, newValue in
             if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !hasStartedTyping {
-                TimerService.shared.clearPendingNotifications()
-                UNUserNotificationCenter.current().removeAllDeliveredNotifications()
                 hasStartedTyping = true
-            }
-            if nagsScheduledDueToBackground {
-                TimerService.shared.clearPendingNotifications()
-                UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-                nagsScheduledDueToBackground = false
             }
         }
         .onDisappear {
-            if !didSubmit && hasStartedTyping {
-                TimerService.shared.scheduleNags()
-            }
             TimerService.shared.isInputPresented = false
         }
     }

@@ -137,6 +137,22 @@ struct DashboardView: View {
                         .font(.title3)
                         .foregroundColor(.themeColor)
                     }
+                    
+                    NavigationLink {
+                        DaySummaryView()
+                    } label: {
+                        HStack {
+                            Image("clocky")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 20, height: 20)
+                                .foregroundStyle(Color.themeColor.gradient)
+                            Text("See Summary")
+                        }
+                        .font(.title3)
+                        .foregroundColor(.themeColor)
+                        .frame(maxWidth: .infinity)
+                    }
                 }
                 
                 Spacer()
@@ -185,16 +201,11 @@ struct DashboardView: View {
             // Sync live activity
             timerService.syncLiveActivity()
 
-            // Check for overdue
+            // Check for overdue - now handled by AlarmKit
             if timerService.isRunning,
                let nextDate = timerService.nextCheckInDate,
                Date() > nextDate {
                 showingAlarm = true
-                UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-                    if requests.isEmpty {
-                        timerService.scheduleNags()
-                    }
-                }
             }
         }
         .onDisappear {

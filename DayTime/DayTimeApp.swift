@@ -7,12 +7,9 @@
 
 import SwiftUI
 import SwiftData
-import UserNotifications
 
 @main
 struct DayTimeApp: App {
-    @StateObject private var notificationDelegate = AppNotificationDelegate()
-    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             ActivityEntry.self,
@@ -31,66 +28,22 @@ struct DayTimeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onAppear {
-                    setupNotifications()
+                .onOpenURL { url in
+                    handleOpenURL(url)
                 }
         }
         .modelContainer(sharedModelContainer)
     }
     
-    private func setupNotifications() {
-        UNUserNotificationCenter.current().delegate = notificationDelegate
+    private func handleOpenURL(_ url: URL) {
+        print("📱 Opened URL: \(url)")
         
-        // Register notification categories
-        let openAction = UNNotificationAction(
-            identifier: "OPEN_APP",
-            title: "Open App",
-            options: [.foreground]
-        )
-        
-        let category = UNNotificationCategory(
-            identifier: "DAYTIME_ALARM",
-            actions: [openAction],
-            intentIdentifiers: [],
-            options: [.allowInCarPlay, .customDismissAction]
-        )
-        
-        UNUserNotificationCenter.current().setNotificationCategories([category])
-    }
-}
-
-class AppNotificationDelegate: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
-    
-    // This allows notifications to show even when app is in foreground
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        
-        if notification.request.content.categoryIdentifier == "DAYTIME_ALARM" {
-            if TimerService.shared.isInputPresented {
-                completionHandler([])
-                return
-            }
-            // Show the alarm notification with sound even when app is open
-            completionHandler([.banner, .sound, .badge])
-            
-            // Also trigger the in-app alarm
+        // Handle AlarmKit deep link for "Update Clocky" action
+        if url.scheme == "daytime" && url.host == "checkin" {
+            // Trigger the check-in view
             DispatchQueue.main.async {
                 TimerService.shared.onAlarmTriggered?()
             }
-        } else {
-            completionHandler([])
         }
-    }
-    
-    // Handle when user taps the notification
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        
-        if response.notification.request.content.categoryIdentifier == "DAYTIME_ALARM" {
-            DispatchQueue.main.async {
-                // Trigger the alarm view when notification is tapped
-                TimerService.shared.onAlarmTriggered?()
-            }
-        }
-        
-        completionHandler()
     }
 }
