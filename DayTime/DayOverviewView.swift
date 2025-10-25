@@ -18,10 +18,6 @@ struct DayOverviewView: View {
     @State private var showingEditSheet = false
     @State private var editingActivity: ActivityEntry?
     @State private var editText = ""
-    // Flag to ensure sample data is injected only once when needed (debug builds)
-    #if DEBUG
-    @State private var didPrefillSample = false
-    #endif
     
     private var userSettings: UserSettings? {
         settings.first
@@ -75,14 +71,6 @@ struct DayOverviewView: View {
             )
         }
         .navigationBarHidden(true)
-        #if DEBUG
-        .onAppear {
-            if !didPrefillSample {
-                prefillSampleData()
-                didPrefillSample = true
-            }
-        }
-        #endif
     }
 
     private var headerView: some View {
@@ -197,49 +185,6 @@ struct DayOverviewView: View {
         modelContext.delete(activity)
         try? modelContext.save()
     }
-
-    #if DEBUG
-    private func prefillSampleData() {
-        guard dayActivities.isEmpty else { return }
-
-        let calendar = Calendar.current
-        let baseDate = calendar.startOfDay(for: selectedDate)
-        let timesAndDescriptions: [(Int, Int, String)] = [
-            (9, 0, "Morning planning and coffee. Reviewed to-do list."),
-            (9, 15, "Deep work: Finished writing product brief for new feature."),
-            (9, 30, "Quick stand-up meeting with the team. Shared updates."),
-            (9, 45, "Took a mini break. Did dishes and stretched a bit."),
-            (10, 0, "Coding session. Fixed a bug that's been annoying me for days."),
-            (10, 15, "Still coding. Got into a flow state with Lofi in the background."),
-            (10, 30, "Sent pull request. Reviewed two teammate PRs."),
-            (10, 45, "Scrolled Twitter for research and memes."),
-            (11, 0, "Cleaned up work desk. Felt messy."),
-            (11, 15, "Read a chapter from 'Show Your Work'. Taking notes."),
-            (11, 30, "Wrote draft for tomorrow's blog post."),
-            (11, 45, "Made a quick omelette and hydrated."),
-            (12, 0, "Walked outside for 10 minutes. Needed fresh air."),
-            (12, 15, "Replied to DMs and checked emails."),
-            (12, 30, "Short breathing exercise. Recentering."),
-            (12, 45, "Brainstorming new video ideas for TikTok.")
-        ]
-
-        // Create a tracking session for the sample entries
-        let session = TrackingSession(startTime: baseDate)
-        modelContext.insert(session)
-
-        for (hour, minute, description) in timesAndDescriptions {
-            var components = DateComponents()
-            components.hour = hour
-            components.minute = minute
-            if let timestamp = calendar.date(byAdding: components, to: baseDate) {
-                let entry = ActivityEntry(activity: description, sessionId: session.id, timestamp: timestamp)
-                modelContext.insert(entry)
-            }
-        }
-
-        try? modelContext.save()
-    }
-    #endif
 }
 
 // ScreenshotView is no longer needed; kept as a minimal placeholder

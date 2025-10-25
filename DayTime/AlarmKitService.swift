@@ -46,9 +46,33 @@ class AlarmKitService {
     }
     
     func requestAuthorization() async throws {
-        let state = try await alarmManager.requestAuthorization()
-        if state != .authorized {
-            throw _Error.noAuthorized
+        print("🔔 Requesting AlarmKit authorization...")
+        print("🔔 Current state before request: \(alarmManager.authorizationState)")
+        
+        // Check if NSAlarmKitUsageDescription exists in Info.plist
+        if let usageDescription = Bundle.main.object(forInfoDictionaryKey: "NSAlarmKitUsageDescription") as? String {
+            print("✅ Found NSAlarmKitUsageDescription: \(usageDescription)")
+        } else {
+            print("❌ WARNING: NSAlarmKitUsageDescription not found in Info.plist!")
+        }
+        
+        do {
+            let state = try await alarmManager.requestAuthorization()
+            print("🔔 Authorization result: \(state)")
+            
+            if state != .authorized {
+                print("❌ Authorization denied or restricted: \(state)")
+                throw _Error.noAuthorized
+            }
+            
+            print("✅ Authorization granted successfully")
+        } catch let error as NSError {
+            print("❌ Error during authorization request:")
+            print("   Domain: \(error.domain)")
+            print("   Code: \(error.code)")
+            print("   Description: \(error.localizedDescription)")
+            print("   UserInfo: \(error.userInfo)")
+            throw error
         }
     }
     
@@ -184,14 +208,21 @@ class AlarmKitService {
     }
     
     private func checkAuthorization() async throws {
-        switch alarmManager.authorizationState {
+        let currentState = alarmManager.authorizationState
+        print("🔐 Current authorization state: \(currentState)")
+        
+        switch currentState {
         case .notDetermined:
+            print("⚠️ Authorization not determined, requesting...")
             try await requestAuthorization()
         case .denied:
+            print("❌ Authorization denied")
             throw _Error.noAuthorized
         case .authorized:
+            print("✅ Authorization already granted")
             return
         @unknown default:
+            print("❌ Unknown authorization state")
             throw _Error.unknownAuthState
         }
     }

@@ -29,48 +29,71 @@ actor GeminiService {
             throw GeminiError.missingAPIKey
         }
         
-        guard !activities.isEmpty else {
-            throw GeminiError.noActivities
+        // Create prompt for Gemini (handles both empty and populated activity lists)
+        let prompt: String
+        
+        if activities.isEmpty {
+            // Special prompt for when user has no activities
+            prompt = """
+            You are Clocky, \(userName)'s friendly check-in partner from the DayTime app. \(userName) just opened the summary view, but they haven't recorded any activities with you today yet!
+            
+            Please provide your response in TWO distinct sections separated by "---SEPARATOR---":
+            
+            SECTION 1 (Shareable Overview - 2-3 sentences max):
+            Create a warm, encouraging message for \(userName) about starting their tracking journey. Make it friendly and motivating. Keep it concise and positive. This could be shared on social media.
+            
+            ---SEPARATOR---
+            
+            SECTION 2 (Personal Message):
+            Provide a gentle, encouraging message including:
+            1. A warm greeting explaining they haven't started tracking yet
+            2. The benefits of tracking activities with Clocky
+            3. A friendly nudge to start their first session
+            4. What they can expect when they do track (insights, patterns, productivity tips)
+            5. An enthusiastic message about being here to support them
+            
+            Keep the tone very friendly, supportive, and non-judgmental - like a supportive friend who's excited to help them on their productivity journey. Use emojis sparingly but effectively.
+            """
+        } else {
+            // Prepare activity data
+            let activitiesText = activities.map { activity in
+                let timeFormatter = DateFormatter()
+                timeFormatter.timeStyle = .short
+                let time = timeFormatter.string(from: activity.timestamp)
+                return "• \(time): \(activity.activity)"
+            }.joined(separator: "\n")
+            
+            // Calculate duration
+            let totalTime = calculateProductiveTime(activities: activities)
+            
+            // Normal prompt with activities
+            prompt = """
+            You are Clocky, \(userName)'s friendly check-in partner from the DayTime app. Analyze the following day's activities and create a warm, engaging summary.
+            
+            Activities for today:
+            \(activitiesText)
+            
+            Total productive time tracked: \(totalTime)
+            Number of check-ins: \(activities.count)
+            
+            Please provide your response in TWO distinct sections separated by "---SEPARATOR---":
+            
+            SECTION 1 (Shareable Overview - 2-3 sentences max):
+            Create a brief, positive summary of what \(userName) accomplished today. Make it shareable and celebration-worthy. Keep it concise, warm, and friendly. This will be shared on social media.
+            
+            ---SEPARATOR---
+            
+            SECTION 2 (Personal Insights):
+            Provide detailed, actionable insights including:
+            1. What \(userName) did well today (be specific and encouraging)
+            2. Time analysis: Where did they spend most of their time? Any patterns?
+            3. Efficiency tips: 2-3 specific suggestions to improve productivity
+            4. Gap identification: Any missing activities or areas that need attention?
+            5. Encouraging message to come back tomorrow
+            
+            Keep the tone friendly, supportive, and conversational - as if you're a helpful friend checking in. Use emojis sparingly but effectively.
+            """
         }
-        
-        // Prepare activity data
-        let activitiesText = activities.map { activity in
-            let timeFormatter = DateFormatter()
-            timeFormatter.timeStyle = .short
-            let time = timeFormatter.string(from: activity.timestamp)
-            return "• \(time): \(activity.activity)"
-        }.joined(separator: "\n")
-        
-        // Calculate duration
-        let totalTime = calculateProductiveTime(activities: activities)
-        
-        // Create prompt for Gemini
-        let prompt = """
-        You are Clocky, \(userName)'s friendly check-in partner from the DayTime app. Analyze the following day's activities and create a warm, engaging summary.
-        
-        Activities for today:
-        \(activitiesText)
-        
-        Total productive time tracked: \(totalTime)
-        Number of check-ins: \(activities.count)
-        
-        Please provide your response in TWO distinct sections separated by "---SEPARATOR---":
-        
-        SECTION 1 (Shareable Overview - 2-3 sentences max):
-        Create a brief, positive summary of what \(userName) accomplished today. Make it shareable and celebration-worthy. Keep it concise, warm, and friendly. This will be shared on social media.
-        
-        ---SEPARATOR---
-        
-        SECTION 2 (Personal Insights):
-        Provide detailed, actionable insights including:
-        1. What \(userName) did well today (be specific and encouraging)
-        2. Time analysis: Where did they spend most of their time? Any patterns?
-        3. Efficiency tips: 2-3 specific suggestions to improve productivity
-        4. Gap identification: Any missing activities or areas that need attention?
-        5. Encouraging message to come back tomorrow
-        
-        Keep the tone friendly, supportive, and conversational - as if you're a helpful friend checking in. Use emojis sparingly but effectively.
-        """
         
         // Prepare request
         let requestBody: [String: Any] = [
@@ -159,7 +182,6 @@ actor GeminiService {
 enum GeminiError: LocalizedError {
     case missingAPIKey
     case invalidAPIKey
-    case noActivities
     case invalidURL
     case invalidResponse
     case apiError(statusCode: Int)
@@ -171,8 +193,6 @@ enum GeminiError: LocalizedError {
             return "AI summary service is not configured. Please contact support."
         case .invalidAPIKey:
             return "Unable to connect to AI service. Please try again later."
-        case .noActivities:
-            return "No activities recorded today. Start tracking to get your summary!"
         case .invalidURL:
             return "Invalid API URL"
         case .invalidResponse:

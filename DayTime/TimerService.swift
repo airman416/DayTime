@@ -128,8 +128,9 @@ class TimerService {
     func updateTimerInterval(_ newInterval: Int) {
         timerInterval = newInterval
         
-        // If a session is running, we need to reschedule
-        if isRunning {
+        // If a session is running AND not paused, we need to reschedule
+        // Don't reschedule during restoration - only during active changes
+        if isRunning && !isPaused && nextCheckInDate != nil {
             scheduleCheckInAndNags()
         }
     }
@@ -144,6 +145,20 @@ class TimerService {
             self.syncLiveActivity()
         }
         return sessionId
+    }
+    
+    func restoreSession(sessionId: UUID) {
+        // Restore session state without scheduling new alarms
+        currentSessionId = sessionId
+        isRunning = true
+        
+        // Only start the update timer if not paused
+        if !isPaused {
+            liveActivityUpdateTimer?.invalidate()
+            liveActivityUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                self.syncLiveActivity()
+            }
+        }
     }
     
     func pauseSession() {
@@ -213,8 +228,13 @@ class TimerService {
                     intervalSeconds: timerInterval,
                     sessionId: sessionId
                 )
+                print("✅ Successfully scheduled check-in alarm")
             } catch {
                 print("❌ Failed to schedule alarm: \(error)")
+                print("   Error details: \(error.localizedDescription)")
+                
+                // If alarm fails, we should still notify the user
+                // For now, log it - in production you might want to show an alert
             }
         }
     }

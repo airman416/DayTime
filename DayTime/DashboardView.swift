@@ -19,6 +19,7 @@ struct DashboardView: View {
     @State private var countdownTimer: Timer?
     @State private var timeRemaining: Int = 0
     @State private var iconOpacity: Double = 1.0
+    @State private var showingAuthError = false
     
     private var userSettings: UserSettings? {
         settings.first
@@ -219,33 +220,36 @@ struct DashboardView: View {
                 onStopSession: stopSession
             )
         }
+        .alert("Alarm Permission Denied", isPresented: $showingAuthError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("DayTime needs permission to schedule check-in reminders. Without this permission, the app cannot track your sessions properly.")
+        }
         .onAppear {
-            timerService.isRunning = activeSession != nil
+            // Load user settings first
             if let settings = userSettings {
                 timerService.updateTimerInterval(settings.timerInterval)
             }
+            
             setupAlarmHandling()
             
-            if timerService.isRunning {
-                startCountdownTimer()
-                // Start flashing animation for existing active session
-                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                    iconOpacity = 0.3
+            // Clean up any lingering active sessions from previous app runs
+            // Don't auto-restore - user should manually start tracking
+            if let session = activeSession {
+                print("⚠️ Found lingering session from \(session.startTime), cleaning it up")
+                session.stop()
+                
+                // Make sure TimerService is also stopped
+                if timerService.isRunning {
+                    timerService.stopSession()
                 }
-            } else {
-                // Ensure icon is solid when not active
-                iconOpacity = 1.0
             }
             
-            // Sync countdown Live Activity
+            // Ensure icon is solid when not active
+            iconOpacity = 1.0
+            
+            // Sync Live Activity state
             timerService.syncLiveActivity()
-            
-            // Check for overdue - now handled by AlarmKit
-            if timerService.isRunning,
-               let nextDate = timerService.nextCheckInDate,
-               Date() > nextDate {
-                showingAlarm = true
-            }
         }
         .onDisappear {
             stopCountdownTimer()
@@ -253,27 +257,39 @@ struct DashboardView: View {
     }
     
     private func startSession() {
-        let sessionId = timerService.startSession()
-        let session = TrackingSession(startTime: Date())
-        session.id = sessionId
-        modelContext.insert(session)
-        
-        let calendar = Calendar.current
-        let isFirstForDay = !activities.contains { activity in
-            calendar.isDate(activity.timestamp, inSameDayAs: Date())
+        Task { @MainActor in
+            // Request authorization first
+            do {
+                try await AlarmKitService.shared.requestAuthorization()
+                
+                // Authorization granted, proceed with session
+                let sessionId = timerService.startSession()
+                let session = TrackingSession(startTime: Date())
+                session.id = sessionId
+                modelContext.insert(session)
+                
+                let calendar = Calendar.current
+                let isFirstForDay = !activities.contains { activity in
+                    calendar.isDate(activity.timestamp, inSameDayAs: Date())
+                }
+                
+                if isFirstForDay {
+                    let startTrackingActivity = ActivityEntry(activity: "Started Tracking", sessionId: session.id)
+                    modelContext.insert(startTrackingActivity)
+                }
+                
+                // Start the flashing animation
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    iconOpacity = 0.3
+                }
+                
+                startCountdownTimer()
+            } catch {
+                // Handle authorization error
+                print("⚠️ Authorization failed in startSession: \(error)")
+                showingAuthError = true
+            }
         }
-        
-        if isFirstForDay {
-            let startTrackingActivity = ActivityEntry(activity: "Started Tracking", sessionId: session.id)
-            modelContext.insert(startTrackingActivity)
-        }
-        
-        // Start the flashing animation
-        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-            iconOpacity = 0.3
-        }
-        
-        startCountdownTimer()
     }
     
     private func stopSession() {

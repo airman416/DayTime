@@ -47,15 +47,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C1535ACE2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTime" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				AlarmIntents.swift,
-				AlarmMetadata.swift,
-			);
-			target = C18266442E240F9500AEEDEF /* DayTime */;
-		};
-		C1535ACF2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTimeWidgetsExtension" target */ = {
+	C1535ACE2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTime" target */ = {
+		isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+		membershipExceptions = (
+			AlarmIntents.swift,
+			AlarmMetadata.swift,
+		);
+		target = C18266442E240F9500AEEDEF /* DayTime */;
+	};
+	C1DAYTIME2EAC0FDA00D7E3FE /* Exceptions for "DayTime" folder in "DayTime" target */ = {
+		isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+		membershipExceptions = (
+			Info.plist,
+		);
+		target = C18266442E240F9500AEEDEF /* DayTime */;
+	};
+	C1535ACF2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTimeWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AlarmIntents.swift,
@@ -80,12 +87,15 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C18266472E240F9500AEEDEF /* DayTime */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = DayTime;
-			sourceTree = "<group>";
-		};
-		C18267212E259E0000AEEDEF /* DayTimeWidgets */ = {
+	C18266472E240F9500AEEDEF /* DayTime */ = {
+		isa = PBXFileSystemSynchronizedRootGroup;
+		exceptions = (
+			C1DAYTIME2EAC0FDA00D7E3FE /* Exceptions for "DayTime" folder in "DayTime" target */,
+		);
+		path = DayTime;
+		sourceTree = "<group>";
+	};
+	C18267212E259E0000AEEDEF /* DayTimeWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				C182673C2E25A1E600AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTime" target */,
@@ -421,15 +431,7 @@
 				CURRENT_PROJECT_VERSION = 1.1;
 				DEVELOPMENT_TEAM = D37CG5HJMJ;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "DayTime needs access to save your daily activity overview screenshots to your photo library.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DayTime needs access to your photo library to save your daily activity overview screenshots.";
-				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_FILE = DayTime/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -455,15 +457,7 @@
 				CURRENT_PROJECT_VERSION = 1.1;
 				DEVELOPMENT_TEAM = D37CG5HJMJ;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "DayTime needs access to save your daily activity overview screenshots to your photo library.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "DayTime needs access to your photo library to save your daily activity overview screenshots.";
-				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_FILE = DayTime/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -490,6 +484,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DayTimeWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DayTimeWidgets;
+				INFOPLIST_KEY_NSAlarmKitUsageDescription = "DayTime schedules check-in reminders to help you stay focused and track your productivity throughout the day.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -518,6 +513,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DayTimeWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DayTimeWidgets;
+				INFOPLIST_KEY_NSAlarmKitUsageDescription = "DayTime schedules check-in reminders to help you stay focused and track your productivity throughout the day.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

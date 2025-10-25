@@ -394,11 +394,6 @@ struct DaySummaryView: View {
     }
     
     private func generateSummary() {
-        guard !todayActivities.isEmpty else {
-            errorMessage = "No activities recorded today. Start tracking to get your summary!"
-            return
-        }
-        
         isLoading = true
         errorMessage = nil
         summary = nil
@@ -417,9 +412,16 @@ struct DaySummaryView: View {
                     self.isLoading = false
                 }
             } catch {
-                // Fallback to activity list instead of showing error
+                // Fallback to activity list only when Gemini actually fails
+                // (not for empty activities - Gemini handles that case)
                 await MainActor.run {
-                    self.fallbackMode = true
+                    if todayActivities.isEmpty {
+                        // If there are no activities and Gemini failed, show error
+                        self.errorMessage = error.localizedDescription
+                    } else {
+                        // If there are activities but Gemini failed, show timeline fallback
+                        self.fallbackMode = true
+                    }
                     self.isLoading = false
                 }
             }
