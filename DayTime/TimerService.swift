@@ -56,6 +56,18 @@ class TimerService {
             }
         }
         
+        let showCheckInCallback: CFNotificationCallback = { _, observer, name, _, _ in
+            DispatchQueue.main.async {
+                print("✅ Received showCheckIn notification")
+                // Only trigger if not already showing the input view
+                if !TimerService.shared.isInputPresented {
+                    TimerService.shared.onAlarmTriggered?()
+                } else {
+                    print("⚠️ Check-in UI already presented, skipping")
+                }
+            }
+        }
+        
         CFNotificationCenterAddObserver(
             CFNotificationCenterGetDarwinNotifyCenter(),
             nil,
@@ -79,6 +91,15 @@ class TimerService {
             nil,
             resumeCallback,
             "com.daytime.resumeSession" as CFString,
+            nil,
+            .deliverImmediately
+        )
+        
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            showCheckInCallback,
+            "com.daytime.showCheckIn" as CFString,
             nil,
             .deliverImmediately
         )
@@ -190,7 +211,7 @@ class TimerService {
         // Reschedule with remaining time
         if let remaining = pausedTimeRemaining, remaining > 0 {
             nextCheckInDate = Date().addingTimeInterval(remaining)
-            scheduleAlarm()
+            scheduleAlarm(customInterval: Int(remaining))
             syncLiveActivity()
         }
         
@@ -219,16 +240,18 @@ class TimerService {
         liveActivityUpdateTimer = nil
     }
     
-    private func scheduleAlarm() {
+    private func scheduleAlarm(customInterval: Int? = nil) {
         guard isRunning, let sessionId = currentSessionId else { return }
+        
+        let interval = customInterval ?? timerInterval
         
         Task {
             do {
                 try await AlarmKitService.shared.scheduleCheckInAlarm(
-                    intervalSeconds: timerInterval,
+                    intervalSeconds: interval,
                     sessionId: sessionId
                 )
-                print("✅ Successfully scheduled check-in alarm")
+                print("✅ Successfully scheduled check-in alarm for \(interval) seconds")
             } catch {
                 print("❌ Failed to schedule alarm: \(error)")
                 print("   Error details: \(error.localizedDescription)")

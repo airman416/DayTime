@@ -49,6 +49,7 @@ struct StopSessionIntent: LiveActivityIntent {
 struct UpdateClockyIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Update Clocky"
     static var description = IntentDescription("Open app to log your activity")
+    static var openAppWhenRun: Bool = true
     
     @Parameter(title: "alarmID")
     var alarmID: String
@@ -58,12 +59,23 @@ struct UpdateClockyIntent: LiveActivityIntent {
             throw DayTimeAlarmError.badAlarmID
         }
         
-        // Silence the alarm (stop it from ringing)
-        // The app will detect this and show the check-in UI
-        try AlarmManager.shared.stop(id: id)
+        print("🎯 UpdateClockyIntent triggered for alarm: \(id)")
         
-        // The app opening is handled via the widgetURL deep link
-        // which is automatically triggered when the intent completes
+        // Silence the alarm (stop it from ringing)
+        try AlarmManager.shared.stop(id: id)
+        print("🔕 Alarm silenced")
+        
+        // Post a Darwin notification to trigger the check-in UI
+        // This works across process boundaries (widget extension -> main app)
+        // The app will be opened automatically due to openAppWhenRun = true
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName("com.daytime.showCheckIn" as CFString),
+            nil,
+            nil,
+            true
+        )
+        print("📢 Posted showCheckIn notification - app will open and show check-in UI")
         
         return .result()
     }

@@ -43,6 +43,7 @@ class AlarmKitService {
     private init() {
         observeAlarmUpdates()
         observeAuthorizationUpdates()
+        observeAlarmStateChanges()
     }
     
     func requestAuthorization() async throws {
@@ -77,73 +78,126 @@ class AlarmKitService {
     }
     
     func scheduleCheckInAlarm(intervalSeconds: Int, sessionId: UUID) async throws {
+        print("🔍 [DEBUG] ===== START ALARM SCHEDULING =====")
+        print("   Interval: \(intervalSeconds) seconds")
+        print("   Session ID: \(sessionId)")
+        
         try await checkAuthorization()
+        print("✅ [DEBUG] Authorization check passed")
         
         // Cancel existing alarm if any
         if let existingId = currentAlarmId {
+            print("🔄 Cancelling existing alarm: \(existingId)")
             try? alarmManager.cancel(id: existingId)
+            print("✅ [DEBUG] Existing alarm cancelled")
         }
         
         let alarmId = UUID()
         currentAlarmId = alarmId
         
-        // Calculate the time for the next check-in
-        let fireDate = Date().addingTimeInterval(TimeInterval(intervalSeconds))
+        print("⏰ Scheduling new alarm \(alarmId) for \(intervalSeconds) seconds")
         
         // Create metadata
+        print("🔍 [DEBUG] Creating metadata...")
         let metadata = DayTimeAlarmMetadata(
             sessionId: sessionId,
             intervalSeconds: intervalSeconds
         )
+        print("✅ [DEBUG] Metadata created")
         
         // Create presentation with "Update Clocky" button
-        let updateClockyButton = AlarmButton(
-            text: "Update Clocky",
-            textColor: .white,
-            systemImageName: "checkmark.circle.fill"
-        )
+        print("🔍 [DEBUG] Creating buttons...")
         
+        // Try simple stop button
+        print("🔍 [DEBUG] Creating simple stop button...")
         let stopButton = AlarmButton(
             text: "Stop",
             textColor: .white,
             systemImageName: "xmark"
         )
+        print("✅ [DEBUG] Stop button created")
         
+        print("🔍 [DEBUG] Creating alert with ONLY stop button (no secondary)...")
         let alert = AlarmPresentation.Alert(
-            title: "Time to check in with Clocky!",
-            stopButton: stopButton,
-            secondaryButton: updateClockyButton,
-            secondaryButtonBehavior: nil
+            title: "Time to check in!",
+            stopButton: stopButton
         )
+        print("✅ [DEBUG] Alert created (minimal)")
         
+        print("🔍 [DEBUG] Creating presentation...")
         let presentation = AlarmPresentation(alert: alert)
+        print("✅ [DEBUG] Presentation created")
         
-        // Create attributes with theme color
-        let attributes = AlarmAttributes(
+        // Create attributes with theme color and custom metadata
+        // Following https://developer.apple.com/documentation/alarmkit/alarmattributes
+        print("🔍 [DEBUG] Creating attributes...")
+        
+        // Try without metadata first
+        print("🔍 [DEBUG] Trying attributes WITHOUT metadata...")
+        let attributes = AlarmAttributes<DayTimeAlarmMetadata>(
             presentation: presentation,
-            metadata: metadata,
+            metadata: nil,
             tintColor: .init(red: 0.96, green: 0.76, blue: 0.05) // DayTime theme color
         )
+        print("✅ [DEBUG] Attributes created (without metadata)")
         
-        // Create configuration using fixed schedule for the specific fire time
-        typealias AlarmConfig = AlarmManager.AlarmConfiguration<DayTimeAlarmMetadata>
-        let configuration = AlarmConfig(
-            countdownDuration: nil,
-            schedule: .fixed(fireDate),
-            attributes: attributes,
-            stopIntent: StopSessionIntent(alarmID: alarmId),
-            secondaryIntent: UpdateClockyIntent(alarmID: alarmId),
-            sound: .default
-        )
+        // Calculate the fire date
+        let fireDate = Date().addingTimeInterval(TimeInterval(intervalSeconds))
+        print("🔍 [DEBUG] Fire date calculated:")
+        print("   Current time: \(Date())")
+        print("   Fire date: \(fireDate)")
+        print("   Time until fire: \(fireDate.timeIntervalSinceNow) seconds")
         
-        // Schedule the alarm
-        do {
-            let _ = try await alarmManager.schedule(id: alarmId, configuration: configuration)
-            print("✅ Alarm scheduled for \(fireDate)")
-        } catch {
-            print("❌ Failed to schedule alarm: \(error)")
+        // Validate fire date
+        if fireDate <= Date() {
+            print("❌ [DEBUG] Fire date is not in the future!")
             throw _Error.failToSchedule
         }
+        
+        // Create configuration with fixed schedule (one-time alarm at specific date)
+        // Following https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-with-alarmkit
+        print("🔍 [DEBUG] Creating configuration...")
+        
+        // Try minimal configuration first - no sound, no intents
+        print("🔍 [DEBUG] Trying minimal configuration without sound and intents...")
+        let configuration = AlarmManager.AlarmConfiguration<DayTimeAlarmMetadata>(
+            schedule: .fixed(fireDate),
+            attributes: attributes
+        )
+        print("✅ [DEBUG] Configuration created (minimal)")
+        
+        // Schedule the alarm
+        print("🔍 [DEBUG] Calling alarmManager.schedule(id: \(alarmId), configuration: ...)")
+        do {
+            let alarm = try await alarmManager.schedule(id: alarmId, configuration: configuration) as Alarm
+            print("✅ Alarm scheduled successfully!")
+            print("   ID: \(alarmId)")
+            print("   Will fire at: \(fireDate)")
+            print("   State: \(alarm.state)")
+            if let countdown = alarm.countdownDuration {
+                print("   Countdown - preAlert: \(countdown.preAlert ?? 0)s, postAlert: \(countdown.postAlert ?? 0)s")
+            }
+        } catch let error as NSError {
+            print("❌ [DEBUG] ===== ALARM SCHEDULING FAILED =====")
+            print("   Domain: \(error.domain)")
+            print("   Code: \(error.code)")
+            print("   Description: \(error.localizedDescription)")
+            print("   User Info: \(error.userInfo)")
+            print("   Localized Failure Reason: \(error.localizedFailureReason ?? "none")")
+            print("   Localized Recovery Suggestion: \(error.localizedRecoverySuggestion ?? "none")")
+            
+            // Try to get underlying error
+            if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                print("   Underlying Error Domain: \(underlyingError.domain)")
+                print("   Underlying Error Code: \(underlyingError.code)")
+                print("   Underlying Error: \(underlyingError.localizedDescription)")
+            }
+            
+            print("🔍 [DEBUG] ===== END ERROR DETAILS =====")
+            throw _Error.failToSchedule
+        }
+        
+        print("🔍 [DEBUG] ===== ALARM SCHEDULING COMPLETED SUCCESSFULLY =====")
     }
     
     func stopSession(alarmID: UUID) throws {
@@ -203,6 +257,32 @@ class AlarmKitService {
         Task {
             for await state in alarmManager.authorizationUpdates {
                 print("🔐 Authorization state: \(state)")
+            }
+        }
+    }
+    
+    private func observeAlarmStateChanges() {
+        Task {
+            // Observe all alarm state changes
+            for await alarms in alarmManager.alarmUpdates {
+                // Check if any of our alarms are now in the "alerting" state
+                if let currentId = currentAlarmId,
+                   let alarm = alarms.first(where: { $0.id == currentId }) {
+                    
+                    // Check alarm state
+                    // Possible states: .alerting, .countdown, .paused, .scheduled
+                    let alarmState = alarm.state
+                    print("🔔 Alarm \(currentId) state: \(alarmState)")
+                    
+                    // When alarm fires (state = .alerting), trigger the check-in UI
+                    // Only trigger if the input view is not already presented
+                    if alarmState == .alerting && !TimerService.shared.isInputPresented {
+                        print("⏰ ALARM IS ALERTING! Triggering check-in UI")
+                        DispatchQueue.main.async {
+                            TimerService.shared.onAlarmTriggered?()
+                        }
+                    }
+                }
             }
         }
     }
