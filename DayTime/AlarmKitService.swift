@@ -7,6 +7,7 @@
 
 import AlarmKit
 import SwiftUI
+import ActivityKit
 
 @Observable
 @MainActor
@@ -108,8 +109,9 @@ class AlarmKitService {
             systemImageName: "arrow.right.circle.fill"
         )
         
+        // Create alert with shorter title to prevent cutoff
         let alert = AlarmPresentation.Alert(
-            title: "Time to check in with Clocky!",
+            title: "Check In Time!",
             stopButton: checkInButton
         )
         
@@ -119,7 +121,7 @@ class AlarmKitService {
         let attributes = AlarmAttributes<DayTimeAlarmMetadata>(
             presentation: presentation,
             metadata: metadata,
-            tintColor: .init(red: 0.96, green: 0.76, blue: 0.05) // DayTime theme color
+            tintColor: .init(red: 0.96, green: 0.76, blue: 0.05)
         )
         
         // Calculate the fire date
@@ -135,7 +137,7 @@ class AlarmKitService {
         
         // Schedule the alarm
         do {
-            let alarm = try await alarmManager.schedule(id: alarmId, configuration: configuration) as Alarm
+            let alarm: Alarm = try await alarmManager.schedule(id: alarmId, configuration: configuration)
             print("✅ Alarm scheduled successfully for \(fireDate)")
             print("   State: \(alarm.state)")
             isRescheduling = false
@@ -204,6 +206,15 @@ class AlarmKitService {
                     if alarmState == .alerting && !TimerService.shared.isInputPresented {
                         print("⏰ ALARM IS ALERTING! Triggering check-in UI")
                         isRescheduling = true
+                        
+                        // End the countdown Live Activity to prevent buffering
+                        Task {
+                            let activities = Activity<DayTimeActivityAttributes>.activities
+                            for activity in activities {
+                                await activity.end(dismissalPolicy: .immediate)
+                            }
+                        }
+                        
                         DispatchQueue.main.async {
                             TimerService.shared.onAlarmTriggered?()
                         }

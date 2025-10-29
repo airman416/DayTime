@@ -20,11 +20,11 @@ struct OnboardingView: View {
             
             // App Logo/Title
             VStack(spacing: 20) {
-                Image(systemName: "clock.fill")
-                    .font(.system(size: 80))
+                Image("clocky")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
                     .foregroundStyle(Color.themeColor.gradient)
-                    .scaleEffect(isAnimating ? 1.1 : 1.0)
-                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
                 
                 Text("DayTime")
                     .font(.system(size: 48, weight: .bold, design: .rounded))
