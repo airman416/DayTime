@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import SwiftData
 
 actor GeminiService {
     static let shared = GeminiService()
     
     // TODO: Add your Gemini API key here
-    private let apiKey: String = "AIzaSyDrOR6r0tvPrJw5-hQvsjB2Q8zEIsRSoEs"
+    private let apiKey: String = "AIzaSyD9A1v_KZT5FK1waWUFtkoowSYJxq8MjpQ"
     private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     
     struct DaySummary {
@@ -37,22 +38,14 @@ actor GeminiService {
             prompt = """
             You are Clocky, \(userName)'s friendly check-in partner from the DayTime app. \(userName) just opened the summary view, but they haven't recorded any activities with you today yet!
             
-            Please provide your response in TWO distinct sections separated by "---SEPARATOR---":
+            You MUST respond with valid JSON only, in this exact format:
+            {
+              "shareableOverview": "Write a warm, encouraging message in FIRST PERSON perspective (as if \(userName) is writing it themselves, using 'I' and 'my'). Make it friendly and motivating. Keep it concise and positive. CRITICAL: The shareableOverview MUST be 280 characters or less (for social media sharing). Do NOT include hashtags. This could be shared on social media.",
+              "personalInsights": "Write as Clocky talking directly to \(userName) in SECOND PERSON perspective (using 'you' and 'your'). Provide a gentle, encouraging message without introducing yourself as Clocky or using any greetings. Keep it short, punchy, and valuable. Do not use any markdown formatting such as ** for bold or * for italics. Use plain text with bullet points for lists if appropriate. Include: 1. Explanation that they haven't started tracking yet, 2. The benefits of tracking activities with Clocky, 3. A friendly nudge to start their first session, 4. What they can expect when they do track (insights, patterns, productivity tips), 5. An enthusiastic message about being here to support them. Keep the tone very friendly, supportive, and non-judgmental - like a supportive friend who's excited to help them on their productivity journey. Use emojis sparingly but effectively."
+            }
             
-            SECTION 1 (Shareable Overview - 2-3 sentences max):
-            Create a warm, encouraging message for \(userName) about starting their tracking journey. Make it friendly and motivating. Keep it concise and positive. This could be shared on social media.
-            
-            ---SEPARATOR---
-            
-            SECTION 2 (Personal Message):
-            Provide a gentle, encouraging message including:
-            1. A warm greeting explaining they haven't started tracking yet
-            2. The benefits of tracking activities with Clocky
-            3. A friendly nudge to start their first session
-            4. What they can expect when they do track (insights, patterns, productivity tips)
-            5. An enthusiastic message about being here to support them
-            
-            Keep the tone very friendly, supportive, and non-judgmental - like a supportive friend who's excited to help them on their productivity journey. Use emojis sparingly but effectively.
+            CRITICAL: The shareableOverview field MUST be 280 characters or less. Count your characters carefully. Write shareableOverview in FIRST PERSON, personalInsights in SECOND PERSON. Do NOT include hashtags in shareableOverview.
+            Respond with ONLY the JSON object, no other text before or after.
             """
         } else {
             // Prepare activity data
@@ -76,22 +69,14 @@ actor GeminiService {
             Total productive time tracked: \(totalTime)
             Number of check-ins: \(activities.count)
             
-            Please provide your response in TWO distinct sections separated by "---SEPARATOR---":
+            You MUST respond with valid JSON only, in this exact format:
+            {
+              "shareableOverview": "Write a brief, positive summary in FIRST PERSON perspective (as if \(userName) is writing it themselves, using 'I' and 'my'). Summarize what \(userName) accomplished today. Make it shareable and celebration-worthy. Keep it concise, warm, and friendly. CRITICAL: The shareableOverview MUST be 280 characters or less (for social media sharing). Do NOT include hashtags. This will be shared on social media.",
+              "personalInsights": "Write as Clocky talking directly to \(userName) in SECOND PERSON perspective (using 'you' and 'your'). Provide detailed, actionable insights without introducing yourself as Clocky or using any greetings. Keep it short, punchy, and valuable. Do not use any markdown formatting such as ** for bold or * for italics. Use plain text with bullet points for lists if appropriate. Include: 1. What \(userName) did well today (be specific and encouraging), 2. Time analysis: Where did they spend most of their time? Any patterns?, 3. Efficiency tips: 2-3 specific suggestions to improve productivity, 4. Gap identification: Any missing activities or areas that need attention?, 5. Encouraging message to come back tomorrow. Keep the tone friendly, supportive, and conversational - as if you're a helpful friend checking in. Use emojis sparingly but effectively."
+            }
             
-            SECTION 1 (Shareable Overview - 2-3 sentences max):
-            Create a brief, positive summary of what \(userName) accomplished today. Make it shareable and celebration-worthy. Keep it concise, warm, and friendly. This will be shared on social media.
-            
-            ---SEPARATOR---
-            
-            SECTION 2 (Personal Insights):
-            Provide detailed, actionable insights including:
-            1. What \(userName) did well today (be specific and encouraging)
-            2. Time analysis: Where did they spend most of their time? Any patterns?
-            3. Efficiency tips: 2-3 specific suggestions to improve productivity
-            4. Gap identification: Any missing activities or areas that need attention?
-            5. Encouraging message to come back tomorrow
-            
-            Keep the tone friendly, supportive, and conversational - as if you're a helpful friend checking in. Use emojis sparingly but effectively.
+            CRITICAL: The shareableOverview field MUST be 280 characters or less. Count your characters carefully. Write shareableOverview in FIRST PERSON, personalInsights in SECOND PERSON. Do NOT include hashtags in shareableOverview.
+            Respond with ONLY the JSON object, no other text before or after.
             """
         }
         
@@ -106,7 +91,8 @@ actor GeminiService {
             ],
             "generationConfig": [
                 "temperature": 0.7,
-                "maxOutputTokens": 1000
+                "maxOutputTokens": 2000,
+                "responseMimeType": "application/json"
             ]
         ]
         
@@ -128,8 +114,10 @@ actor GeminiService {
         
         guard httpResponse.statusCode == 200 else {
             if httpResponse.statusCode == 400 {
+                print("DEBUG: Gemini API returned 400 status code. Response: \(String(data: data, encoding: .utf8) ?? "nil")")
                 throw GeminiError.invalidAPIKey
             }
+            print("DEBUG: Gemini API error with status code: \(httpResponse.statusCode). Response: \(String(data: data, encoding: .utf8) ?? "nil")")
             throw GeminiError.apiError(statusCode: httpResponse.statusCode)
         }
         
@@ -141,17 +129,134 @@ actor GeminiService {
               let parts = content["parts"] as? [[String: Any]],
               let firstPart = parts.first,
               let text = firstPart["text"] as? String else {
+            print("DEBUG: Failed to parse Gemini JSON response. Raw data: \(String(data: data, encoding: .utf8) ?? "nil")")
             throw GeminiError.parsingError
         }
         
-        // Split response into shareable and personal sections
-        let components = text.components(separatedBy: "---SEPARATOR---")
-        guard components.count >= 2 else {
-            throw GeminiError.parsingError
+        print("DEBUG: Gemini API response text (length: \(text.count)): \(text)")
+        
+        // Clean the text - remove markdown code blocks if present
+        var cleanedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleanedText.hasPrefix("```json") {
+            cleanedText = String(cleanedText.dropFirst(7))
+        }
+        if cleanedText.hasPrefix("```") {
+            cleanedText = String(cleanedText.dropFirst(3))
+        }
+        if cleanedText.hasSuffix("```") {
+            cleanedText = String(cleanedText.dropLast(3))
+        }
+        cleanedText = cleanedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        print("DEBUG: Cleaned text (length: \(cleanedText.count)): \(cleanedText)")
+        
+        // Helper function for default insights
+        func generateDefaultInsights(activities: [ActivityEntry]) -> String {
+            if activities.isEmpty {
+                return """
+                You haven't started tracking activities yet today! Here's what you can do:
+                
+                • Start your first check-in session with Clocky
+                • Track your activities throughout the day
+                • Get personalized insights and productivity tips
+                • Build better habits and see your progress over time
+                
+                Clocky is here to help you stay productive and organized. Ready to get started?
+                """
+            } else {
+                let activityCount = activities.count
+                let timeText = calculateProductiveTime(activities: activities)
+                return """
+                Great job tracking \(activityCount) check-in\(activityCount == 1 ? "" : "s") today!
+                
+                • You've been consistent with your tracking
+                • Total productive time: \(timeText)
+                • Keep up the momentum and continue tracking tomorrow
+                
+                The more you track, the better insights Clocky can provide. See you tomorrow!
+                """
+            }
         }
         
-        let shareableOverview = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
-        let personalInsights = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+        // Parse JSON response
+        let shareableOverview: String
+        let personalInsights: String
+        
+        // Try to parse JSON
+        if let jsonData = cleanedText.data(using: .utf8) {
+            do {
+                if let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                    print("DEBUG: Successfully parsed JSON object. Keys: \(json.keys.joined(separator: ", "))")
+                    
+                    if let overview = json["shareableOverview"] as? String,
+                       let insights = json["personalInsights"] as? String {
+                        print("DEBUG: Successfully extracted both fields")
+                        var trimmedOverview = overview.trimmingCharacters(in: .whitespacesAndNewlines)
+                        
+                        // Ensure shareableOverview is 280 characters or less
+                        if trimmedOverview.count > 280 {
+                            print("DEBUG: shareableOverview is \(trimmedOverview.count) characters, truncating to 280")
+                            let endIndex = trimmedOverview.index(trimmedOverview.startIndex, offsetBy: 277)
+                            trimmedOverview = String(trimmedOverview[..<endIndex]) + "..."
+                        }
+                        print("DEBUG: Final shareableOverview length: \(trimmedOverview.count) characters")
+                        
+                        shareableOverview = trimmedOverview
+                        personalInsights = insights.trimmingCharacters(in: .whitespacesAndNewlines)
+                    } else {
+                        print("DEBUG: JSON parsed but missing required fields.")
+                        print("DEBUG: shareableOverview exists: \(json["shareableOverview"] != nil)")
+                        print("DEBUG: personalInsights exists: \(json["personalInsights"] != nil)")
+                        print("DEBUG: Available keys: \(json.keys.joined(separator: ", "))")
+                        
+                        // Fallback: try to extract what we can
+                        var extractedOverview = (json["shareableOverview"] as? String) ?? text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let extractedInsights = (json["personalInsights"] as? String) ?? generateDefaultInsights(activities: activities)
+                        
+                        // Ensure shareableOverview is 280 characters or less
+                        if extractedOverview.count > 280 {
+                            print("DEBUG: shareableOverview is \(extractedOverview.count) characters, truncating to 280")
+                            let endIndex = extractedOverview.index(extractedOverview.startIndex, offsetBy: 277)
+                            extractedOverview = String(extractedOverview[..<endIndex]) + "..."
+                        }
+                        
+                        shareableOverview = extractedOverview
+                        personalInsights = extractedInsights
+                    }
+                } else {
+                    print("DEBUG: JSON parsing returned wrong type")
+                    shareableOverview = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    personalInsights = generateDefaultInsights(activities: activities)
+                }
+            } catch {
+                print("DEBUG: JSON parsing error: \(error.localizedDescription)")
+                print("DEBUG: Error details: \(error)")
+                var fallbackOverview = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Ensure shareableOverview is 280 characters or less
+                if fallbackOverview.count > 280 {
+                    print("DEBUG: Fallback overview is \(fallbackOverview.count) characters, truncating to 280")
+                    let endIndex = fallbackOverview.index(fallbackOverview.startIndex, offsetBy: 277)
+                    fallbackOverview = String(fallbackOverview[..<endIndex]) + "..."
+                }
+                
+                shareableOverview = fallbackOverview
+                personalInsights = generateDefaultInsights(activities: activities)
+            }
+        } else {
+            print("DEBUG: Failed to convert text to data")
+            var fallbackOverview = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Ensure shareableOverview is 280 characters or less
+            if fallbackOverview.count > 280 {
+                print("DEBUG: Fallback overview is \(fallbackOverview.count) characters, truncating to 280")
+                let endIndex = fallbackOverview.index(fallbackOverview.startIndex, offsetBy: 277)
+                fallbackOverview = String(fallbackOverview[..<endIndex]) + "..."
+            }
+            
+            shareableOverview = fallbackOverview
+            personalInsights = generateDefaultInsights(activities: activities)
+        }
         
         return DaySummary(
             shareableOverview: shareableOverview,

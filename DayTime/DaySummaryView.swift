@@ -146,7 +146,7 @@ struct DaySummaryView: View {
                         .frame(width: 30, height: 30)
                         .foregroundStyle(Color.themeColor.gradient)
                     
-                    Text("Today's Highlight")
+                    Text("Shareable Highlight")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
@@ -154,14 +154,16 @@ struct DaySummaryView: View {
                     Spacer()
                 }
                 
-                Text(summary.shareableOverview)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .lineSpacing(6)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.themeColor.opacity(0.1))
-                    .cornerRadius(12)
+                ScrollView {
+                    Text(summary.shareableOverview)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .lineSpacing(6)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .background(Color.themeColor.opacity(0.1))
+                .cornerRadius(12)
                 
                 Button(action: { showingShareSheet = true }) {
                     HStack {
@@ -199,10 +201,13 @@ struct DaySummaryView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                Text(summary.personalInsights)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .lineSpacing(6)
+                ScrollView {
+                    Text(summary.personalInsights)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .lineSpacing(6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             .padding()
             .background(.ultraThinMaterial)
@@ -398,6 +403,7 @@ struct DaySummaryView: View {
         errorMessage = nil
         summary = nil
         fallbackMode = false
+        clockyRotation = 0
         
         Task {
             do {
@@ -412,14 +418,19 @@ struct DaySummaryView: View {
                     self.isLoading = false
                 }
             } catch {
+                print("DEBUG: Failed to generate summary. Error: \(error.localizedDescription)")
+                print("DEBUG: Today's activities count: \(todayActivities.count)")
+                
                 // Fallback to activity list only when Gemini actually fails
                 // (not for empty activities - Gemini handles that case)
                 await MainActor.run {
                     if todayActivities.isEmpty {
                         // If there are no activities and Gemini failed, show error
+                        print("DEBUG: No activities, showing error message")
                         self.errorMessage = error.localizedDescription
                     } else {
                         // If there are activities but Gemini failed, show timeline fallback
+                        print("DEBUG: Has activities, showing fallback mode")
                         self.fallbackMode = true
                     }
                     self.isLoading = false

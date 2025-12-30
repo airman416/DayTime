@@ -47,22 +47,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-	C1535ACE2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTime" target */ = {
-		isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-		membershipExceptions = (
-			AlarmIntents.swift,
-			AlarmMetadata.swift,
-		);
-		target = C18266442E240F9500AEEDEF /* DayTime */;
-	};
-	C1DAYTIME2EAC0FDA00D7E3FE /* Exceptions for "DayTime" folder in "DayTime" target */ = {
-		isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-		membershipExceptions = (
-			Info.plist,
-		);
-		target = C18266442E240F9500AEEDEF /* DayTime */;
-	};
-	C1535ACF2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTimeWidgetsExtension" target */ = {
+		C1535ACE2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTime" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AlarmIntents.swift,
+				AlarmMetadata.swift,
+			);
+			target = C18266442E240F9500AEEDEF /* DayTime */;
+		};
+		C1535ACF2EAC0FDA00D7E3FE /* Exceptions for "Shared" folder in "DayTimeWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AlarmIntents.swift,
@@ -84,18 +77,25 @@
 			);
 			target = C18266442E240F9500AEEDEF /* DayTime */;
 		};
+		C1DAYTIME2EAC0FDA00D7E3FE /* Exceptions for "DayTime" folder in "DayTime" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C18266442E240F9500AEEDEF /* DayTime */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-	C18266472E240F9500AEEDEF /* DayTime */ = {
-		isa = PBXFileSystemSynchronizedRootGroup;
-		exceptions = (
-			C1DAYTIME2EAC0FDA00D7E3FE /* Exceptions for "DayTime" folder in "DayTime" target */,
-		);
-		path = DayTime;
-		sourceTree = "<group>";
-	};
-	C18267212E259E0000AEEDEF /* DayTimeWidgets */ = {
+		C18266472E240F9500AEEDEF /* DayTime */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C1DAYTIME2EAC0FDA00D7E3FE /* Exceptions for "DayTime" folder in "DayTime" target */,
+			);
+			path = DayTime;
+			sourceTree = "<group>";
+		};
+		C18267212E259E0000AEEDEF /* DayTimeWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				C182673C2E25A1E600AEEDEF /* Exceptions for "DayTimeWidgets" folder in "DayTime" target */,
@@ -428,7 +428,7 @@
 				CODE_SIGN_ENTITLEMENTS = DayTime/DayTime.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.1;
+				CURRENT_PROJECT_VERSION = 1.2;
 				DEVELOPMENT_TEAM = D37CG5HJMJ;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = DayTime/Info.plist;
@@ -436,7 +436,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = live.swipefeed.DayTime;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -454,7 +454,7 @@
 				CODE_SIGN_ENTITLEMENTS = DayTime/DayTime.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.1;
+				CURRENT_PROJECT_VERSION = 1.2;
 				DEVELOPMENT_TEAM = D37CG5HJMJ;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = DayTime/Info.plist;
@@ -462,7 +462,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = live.swipefeed.DayTime;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
