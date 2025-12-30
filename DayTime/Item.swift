@@ -49,11 +49,15 @@ final class UserSettings {
     var timerInterval: Int // in seconds
     var notificationSoundName: String
     var isOnboardingComplete: Bool
+    var subscriptionStatus: String // "active", "inactive", or "unknown"
+    var freeTrialEndDate: Date?
     
-    init(userName: String = "", timerInterval: Int = 900, notificationSoundName: String = "default", isOnboardingComplete: Bool = false) { // 900 seconds = 15 minutes
+    init(userName: String = "", timerInterval: Int = 900, notificationSoundName: String = "default", isOnboardingComplete: Bool = false, subscriptionStatus: String = "unknown", freeTrialEndDate: Date? = nil) { // 900 seconds = 15 minutes
         self.userName = userName
         self.timerInterval = timerInterval
         self.notificationSoundName = notificationSoundName
         self.isOnboardingComplete = isOnboardingComplete
+        self.subscriptionStatus = subscriptionStatus
+        self.freeTrialEndDate = freeTrialEndDate
     }
 }

@@ -19,8 +19,26 @@ struct DayOverviewView: View {
     @State private var editingActivity: ActivityEntry?
     @State private var editText = ""
     
+    // UserDefaults key for storing name as backup (in case SwiftData falls back to in-memory)
+    private static let userNameKey = "DayTime_UserName"
+    
     private var userSettings: UserSettings? {
         settings.first
+    }
+    
+    /// Gets the user's name from SwiftData or UserDefaults backup
+    private var displayName: String {
+        // First check SwiftData
+        if let name = userSettings?.userName.trimmingCharacters(in: .whitespacesAndNewlines),
+           !name.isEmpty {
+            return name
+        }
+        // Fall back to UserDefaults
+        if let name = UserDefaults.standard.string(forKey: Self.userNameKey)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !name.isEmpty {
+            return name
+        }
+        return "User"
     }
     
     private var dayActivities: [ActivityEntry] {
@@ -83,7 +101,7 @@ struct DayOverviewView: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(userSettings?.userName ?? "User")'s DayTime")
+                Text("\(displayName)'s DayTime")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)

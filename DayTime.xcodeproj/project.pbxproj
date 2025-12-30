@@ -12,6 +12,8 @@
 		C182671F2E259E0000AEEDEF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C18266A02E258F2700AEEDEF /* WidgetKit.framework */; };
 		C18267202E259E0000AEEDEF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C18266A22E258F2700AEEDEF /* SwiftUI.framework */; };
 		C18267312E259E0000AEEDEF /* DayTimeWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C19F1A002F03E3A50025B424 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = C19F1A012F03E3A50025B424 /* SuperwallKit */; };
+		C19F1B492F03F3110025B424 /* DayTime.storekit in Resources */ = {isa = PBXBuildFile; fileRef = C19F1B482F03F3110025B424 /* DayTime.storekit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +46,7 @@
 		C18266A02E258F2700AEEDEF /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C18266A22E258F2700AEEDEF /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DayTimeWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C19F1B482F03F3110025B424 /* DayTime.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = DayTime.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -121,6 +124,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C15359E82EAC0D1000D7E3FE /* AlarmKit.framework in Frameworks */,
+				C19F1A002F03E3A50025B424 /* SuperwallKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,6 +144,7 @@
 		C182663C2E240F9500AEEDEF = {
 			isa = PBXGroup;
 			children = (
+				C19F1B482F03F3110025B424 /* DayTime.storekit */,
 				C18266472E240F9500AEEDEF /* DayTime */,
 				C18267212E259E0000AEEDEF /* DayTimeWidgets */,
 				C18267FF2E25FF0000AEEDEF /* Shared */,
@@ -189,6 +194,7 @@
 			);
 			name = DayTime;
 			packageProductDependencies = (
+				C19F1A012F03E3A50025B424 /* SuperwallKit */,
 			);
 			productName = DayTime;
 			productReference = C18266452E240F9500AEEDEF /* DayTime.app */;
@@ -243,6 +249,9 @@
 			);
 			mainGroup = C182663C2E240F9500AEEDEF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C19F19FF2F03E3A50025B424 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C18266462E240F9500AEEDEF /* Products */;
 			projectDirPath = "";
@@ -259,6 +268,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C19F1B492F03F3110025B424 /* DayTime.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,6 +571,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C19F19FF2F03E3A50025B424 /* XCRemoteSwiftPackageReference "Superwall-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/superwall/Superwall-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.11.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C19F1A012F03E3A50025B424 /* SuperwallKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C19F19FF2F03E3A50025B424 /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
+			productName = SuperwallKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C182663D2E240F9500AEEDEF /* Project object */;
 }

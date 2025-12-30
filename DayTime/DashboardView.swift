@@ -20,6 +20,10 @@ struct DashboardView: View {
     @State private var timeRemaining: Int = 0
     @State private var iconOpacity: Double = 1.0
     @State private var showingAuthError = false
+    @State private var motivationalMessage: String = ""
+    
+    // UserDefaults key for storing name as backup (in case SwiftData falls back to in-memory)
+    private static let userNameKey = "DayTime_UserName"
     
     private var userSettings: UserSettings? {
         settings.first
@@ -29,12 +33,27 @@ struct DashboardView: View {
         sessions.first { $0.isActive }
     }
     
+    /// Gets the user's name from SwiftData or UserDefaults backup
+    private var displayName: String {
+        // First check SwiftData
+        if let name = userSettings?.userName.trimmingCharacters(in: .whitespacesAndNewlines),
+           !name.isEmpty {
+            return name
+        }
+        // Fall back to UserDefaults
+        if let name = UserDefaults.standard.string(forKey: Self.userNameKey)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !name.isEmpty {
+            return name
+        }
+        return "Friend"
+    }
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
                 // Header with greeting
                 VStack(spacing: 10) {
-                    Text("Hello, \(userSettings?.userName ?? "Friend")! 👋")
+                    Text("Hello, \(displayName)! 👋")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -152,15 +171,24 @@ struct DashboardView: View {
                             }
                         }
                     } else {
-                        Button(action: startSession) {
-                            Text("Start Tracking")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.themeColor.gradient)
-                                .cornerRadius(12)
+                        VStack(spacing: 12) {
+                            Text(motivationalMessage)
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                            
+                            Button(action: startSession) {
+                                Text("Start Tracking")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.themeColor.gradient)
+                                    .cornerRadius(12)
+                            }
                         }
                     }
                     
@@ -250,6 +278,9 @@ struct DashboardView: View {
             
             // Sync Live Activity state
             timerService.syncLiveActivity()
+            
+            // Set random motivational message
+            motivationalMessage = getRandomMotivationalMessage()
         }
         .onDisappear {
             stopCountdownTimer()
@@ -353,6 +384,62 @@ struct DashboardView: View {
             let minutes = seconds / 60
             return "\(minutes) minutes"
         }
+    }
+    
+    private func getRandomMotivationalMessage() -> String {
+        let messages = [
+            "Every great achievement begins with a single step.",
+            "You've got this! Let's make today count.",
+            "Small progress is still progress.",
+            "Your future self will thank you.",
+            "Focus on progress, not perfection.",
+            "You're capable of amazing things.",
+            "Today is a fresh start.",
+            "Believe in yourself and all that you are.",
+            "Success is the sum of small efforts repeated daily.",
+            "You're stronger than you think.",
+            "Make today your masterpiece.",
+            "The only way to do great work is to love what you do.",
+            "Dream big, work hard, stay focused.",
+            "Your potential is limitless.",
+            "Every moment is a new beginning.",
+            "You are braver than you believe.",
+            "Turn your dreams into reality.",
+            "Progress, not perfection.",
+            "You're on the right track.",
+            "Today's effort is tomorrow's success.",
+            "Stay focused, stay determined.",
+            "You have the power to change your day.",
+            "Every step forward counts.",
+            "Your dedication will pay off.",
+            "Keep going, you're doing great.",
+            "Success starts with a single decision.",
+            "You're building something amazing.",
+            "Today's work shapes tomorrow's results.",
+            "Stay positive, stay productive.",
+            "You're making progress every moment.",
+            "Focus on what you can control.",
+            "Your hard work is paying off.",
+            "Every day is a chance to improve.",
+            "You're creating your own success story.",
+            "Keep pushing forward.",
+            "You're capable of more than you know.",
+            "Today's discipline is tomorrow's freedom.",
+            "You're on your way to greatness.",
+            "Stay committed to your goals.",
+            "You're building momentum.",
+            "Every action moves you closer to your goal.",
+            "You're stronger than any challenge.",
+            "Today is your opportunity to shine.",
+            "Keep your eyes on the prize.",
+            "You're making a difference.",
+            "Success is built one moment at a time.",
+            "You're exactly where you need to be.",
+            "Stay focused on your why.",
+            "You're creating positive change.",
+            "Every effort brings you closer to success."
+        ]
+        return messages.randomElement() ?? messages[0]
     }
 }
 

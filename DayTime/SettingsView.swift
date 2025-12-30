@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import SuperwallKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -14,6 +15,9 @@ struct SettingsView: View {
     @State private var userName = ""
     @State private var timerInterval = 900 // 15 minutes in seconds
     private let timerService = TimerService.shared
+    
+    // UserDefaults key for storing name as backup (in case SwiftData falls back to in-memory)
+    private static let userNameKey = "DayTime_UserName"
     
     private var userSettings: UserSettings? {
         settings.first
@@ -85,12 +89,35 @@ struct SettingsView: View {
             userName = settings.userName
             timerInterval = settings.timerInterval
         }
+        
+        // If userName is empty, try to load from UserDefaults backup
+        if userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let backupName = UserDefaults.standard.string(forKey: Self.userNameKey)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !backupName.isEmpty {
+                userName = backupName
+            }
+        }
     }
     
     private func saveSettings() {
+        let trimmedName = userName.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Save to UserDefaults as backup (in case SwiftData is using in-memory storage)
+        if !trimmedName.isEmpty {
+            UserDefaults.standard.set(trimmedName, forKey: Self.userNameKey)
+        }
+        
         if let existingSettings = userSettings {
+            let oldName = existingSettings.userName
             existingSettings.userName = userName
             existingSettings.timerInterval = timerInterval
+            
+            // Update Superwall user attributes if name changed
+            if oldName != userName {
+                Superwall.shared.setUserAttributes([
+                    "name": userName
+                ])
+            }
         } else {
             let newSettings = UserSettings(
                 userName: userName,
@@ -99,6 +126,11 @@ struct SettingsView: View {
                 isOnboardingComplete: true
             )
             modelContext.insert(newSettings)
+            
+            // Set user attributes in Superwall
+            Superwall.shared.setUserAttributes([
+                "name": userName
+            ])
         }
         
         // Update the timer service with the new interval
