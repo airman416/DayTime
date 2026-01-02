@@ -15,6 +15,7 @@ struct DashboardView: View {
     @Query private var activities: [ActivityEntry]
     @State private var timerService = TimerService.shared
     @State private var showingAlarm = false
+    @State private var showingCheckIn = false
     @State private var currentActivity = ""
     @State private var countdownTimer: Timer?
     @State private var timeRemaining: Int = 0
@@ -189,6 +190,19 @@ struct DashboardView: View {
                                     .background(Color.themeColor.gradient)
                                     .cornerRadius(12)
                             }
+                            
+                            Button(action: {
+                                showingCheckIn = true
+                            }) {
+                                Text("Check in Now")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.themeColor)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.themeColor.opacity(0.1))
+                                    .cornerRadius(12)
+                            }
                         }
                     }
                     
@@ -246,6 +260,15 @@ struct DashboardView: View {
                 sessionId: timerService.currentSessionId ?? UUID(),
                 activity: $currentActivity,
                 onStopSession: stopSession
+            )
+        }
+        .fullScreenCover(isPresented: $showingCheckIn) {
+            ActivityInputView(
+                isPresented: $showingCheckIn,
+                sessionId: UUID(), // Dummy UUID for check-ins without active session
+                activity: $currentActivity,
+                onStopSession: nil, // No session to stop
+                isManualCheckIn: true // This is a manual check-in without active session
             )
         }
         .alert("Alarm Permission Denied", isPresented: $showingAuthError) {

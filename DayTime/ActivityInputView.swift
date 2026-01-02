@@ -20,6 +20,7 @@ struct ActivityInputView: View {
     @State private var didSubmit = false
     @FocusState private var isTextFieldFocused: Bool
     var onStopSession: (() -> Void)?
+    var isManualCheckIn: Bool = false // True when user manually checks in without active session
     @State private var nagsScheduledDueToBackground = false
     @Environment(\.scenePhase) private var scenePhase
     
@@ -53,7 +54,7 @@ struct ActivityInputView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("What did you accomplish in the last \(formattedInterval)?")
+                    Text(isManualCheckIn ? "What are you working on right now?" : "What did you accomplish in the last \(formattedInterval)?")
                         .font(.title3)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -140,7 +141,10 @@ struct ActivityInputView: View {
         activityText = ""
         didSubmit = true
         isPresented = false
-        TimerService.shared.scheduleCheckInAndNags()
+        // Only schedule next check-in if there's an active session
+        if !isManualCheckIn {
+            TimerService.shared.scheduleCheckInAndNags()
+        }
     }
     
     private func saveActivityAndStop() {
@@ -173,6 +177,16 @@ struct ActivityInputView: View {
         isPresented: .constant(true),
         sessionId: UUID(),
         activity: .constant("")
+    )
+    .modelContainer(for: [ActivityEntry.self, UserSettings.self], inMemory: true)
+}
+
+#Preview("Manual Check-in") {
+    ActivityInputView(
+        isPresented: .constant(true),
+        sessionId: UUID(),
+        activity: .constant(""),
+        isManualCheckIn: true
     )
     .modelContainer(for: [ActivityEntry.self, UserSettings.self], inMemory: true)
 }
