@@ -47,6 +47,8 @@
 		C18266A22E258F2700AEEDEF /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		C182671E2E259E0000AEEDEF /* DayTimeWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DayTimeWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C19F1B482F03F3110025B424 /* DayTime.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = DayTime.storekit; sourceTree = "<group>"; };
+		C1CONFIG12F03F3110025B424 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		C1CONFIG22F03F3110025B425 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -148,9 +150,19 @@
 				C18266472E240F9500AEEDEF /* DayTime */,
 				C18267212E259E0000AEEDEF /* DayTimeWidgets */,
 				C18267FF2E25FF0000AEEDEF /* Shared */,
+				C1CONFIG32F03F3110025B426 /* Config */,
 				C182669F2E258F2700AEEDEF /* Frameworks */,
 				C18266462E240F9500AEEDEF /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		C1CONFIG32F03F3110025B426 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C1CONFIG12F03F3110025B424 /* Debug.xcconfig */,
+				C1CONFIG22F03F3110025B425 /* Release.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		C18266462E240F9500AEEDEF /* Products */ = {
@@ -432,6 +444,7 @@
 		};
 		C18266532E240F9600AEEDEF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1CONFIG12F03F3110025B424 /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -458,6 +471,7 @@
 		};
 		C18266542E240F9600AEEDEF /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1CONFIG22F03F3110025B425 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

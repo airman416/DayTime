@@ -1,0 +1,7 @@
+// Release Configuration Template
+// Copy this file to Release.xcconfig and add your actual API keys
+// Release.xcconfig is gitignored and will not be committed
+
+GEMINI_API_KEY = YOUR_GEMINI_API_KEY_HERE
+SUPERWALL_API_KEY = YOUR_SUPERWALL_API_KEY_HERE
+

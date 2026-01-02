@@ -61,3 +61,31 @@ final class UserSettings {
         self.freeTrialEndDate = freeTrialEndDate
     }
 }
+
+@Model
+final class DaySummary {
+    var id: UUID
+    var date: Date // The date this summary is for (start of day)
+    var shareableOverview: String
+    var personalInsights: String
+    var generatedDate: Date // When the summary was generated
+    var isFallbackMode: Bool // Whether this is a fallback summary (no AI)
+    
+    init(date: Date, shareableOverview: String, personalInsights: String, generatedDate: Date = Date(), isFallbackMode: Bool = false) {
+        self.id = UUID()
+        self.date = Calendar.current.startOfDay(for: date)
+        self.shareableOverview = shareableOverview
+        self.personalInsights = personalInsights
+        self.generatedDate = generatedDate
+        self.isFallbackMode = isFallbackMode
+    }
+    
+    /// Convert to GeminiService.DaySummary for compatibility
+    func toGeminiSummary() -> GeminiService.DaySummary {
+        return GeminiService.DaySummary(
+            shareableOverview: shareableOverview,
+            personalInsights: personalInsights,
+            generatedDate: generatedDate
+        )
+    }
+}

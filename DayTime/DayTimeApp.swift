@@ -17,32 +17,75 @@ struct DayTimeApp: App {
         let schema = Schema([
             ActivityEntry.self,
             TrackingSession.self,
-            UserSettings.self
+            UserSettings.self,
+            DaySummary.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
+        // Use persistent storage (not in-memory) to ensure data persists
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false
+        )
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            
+            // Restore from backup if SwiftData is empty
+            Task { @MainActor in
+                DayTimeApp.restoreFromBackupIfNeeded(container: container)
+            }
+            
+            return container
         } catch {
             // Schema migration error - this happens when we add new properties to existing models
             print("⚠️ ModelContainer load error: \(error)")
             print("⚠️ This usually happens after adding new properties to SwiftData models.")
-            print("⚠️ Solution: Delete the app from your device/simulator and reinstall.")
-            print("⚠️ Falling back to in-memory storage for this session...")
+            print("⚠️ Attempting to restore from backup...")
             
-            // Use in-memory storage as fallback so the app doesn't crash
-            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            // Try to restore from backup before falling back to in-memory
             do {
-                return try ModelContainer(for: schema, configurations: [fallbackConfig])
+                let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                let fallbackContainer = try ModelContainer(for: schema, configurations: [fallbackConfig])
+                
+                // Restore from backup
+                Task { @MainActor in
+                    DayTimeApp.restoreFromBackupIfNeeded(container: fallbackContainer)
+                }
+                
+                return fallbackContainer
             } catch {
                 fatalError("Could not create ModelContainer even with in-memory storage: \(error)")
             }
         }
     }()
     
+    /// Restore data from JSON backup if SwiftData is empty
+    @MainActor
+    private static func restoreFromBackupIfNeeded(container: ModelContainer) {
+        let context = container.mainContext
+        let descriptor = FetchDescriptor<ActivityEntry>()
+        
+        do {
+            let existingActivities = try context.fetch(descriptor)
+            
+            // Only restore if SwiftData is empty but backup exists
+            if existingActivities.isEmpty && DataPersistenceService.shared.hasBackups() {
+                print("📦 SwiftData is empty but backups exist. Restoring from backup...")
+                let (activities, sessions, settings, summaries) = DataPersistenceService.shared.restoreAll(modelContext: context)
+                
+                if !activities.isEmpty || !sessions.isEmpty || !settings.isEmpty || !summaries.isEmpty {
+                    print("✅ Successfully restored \(activities.count) activities, \(sessions.count) sessions, \(settings.count) settings, and \(summaries.count) summaries from backup")
+                }
+            }
+        } catch {
+            print("⚠️ Error checking for existing data: \(error)")
+        }
+    }
+    
     init() {
         // Configure Superwall SDK
-        let apiKey = "pk_ZLANkTPR-wJCkJy0vNp5m"
+        // API key is loaded from Info.plist (which gets values from .xcconfig build settings)
+        let apiKey = Bundle.main.infoDictionary?["SUPERWALL_API_KEY"] as? String ?? ""
         Superwall.configure(apiKey: apiKey)
     }
     

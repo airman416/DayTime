@@ -124,6 +124,18 @@ struct ActivityInputView: View {
         )
         modelContext.insert(entry)
         
+        // Save context and backup
+        do {
+            try modelContext.save()
+            
+            // Backup activities after saving
+            let descriptor = FetchDescriptor<ActivityEntry>()
+            let allActivities = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupActivities(allActivities)
+        } catch {
+            print("⚠️ Failed to save activity: \(error)")
+        }
+        
         activity = activityText
         activityText = ""
         didSubmit = true
@@ -137,6 +149,18 @@ struct ActivityInputView: View {
             sessionId: sessionId
         )
         modelContext.insert(entry)
+        
+        // Save context and backup
+        do {
+            try modelContext.save()
+            
+            // Backup activities after saving
+            let descriptor = FetchDescriptor<ActivityEntry>()
+            let allActivities = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupActivities(allActivities)
+        } catch {
+            print("⚠️ Failed to save activity: \(error)")
+        }
         
         didSubmit = true
         onStopSession?()

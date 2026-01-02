@@ -133,6 +133,18 @@ struct SettingsView: View {
             ])
         }
         
+        // Save context and backup settings
+        do {
+            try modelContext.save()
+            
+            // Backup settings after saving
+            let descriptor = FetchDescriptor<UserSettings>()
+            let allSettings = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupSettings(allSettings)
+        } catch {
+            print("⚠️ Failed to save settings: \(error)")
+        }
+        
         // Update the timer service with the new interval
         timerService.updateTimerInterval(timerInterval)
     }

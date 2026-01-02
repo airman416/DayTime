@@ -36,3 +36,7 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# API Keys - Keep templates, ignore actual config files
+Config/Debug.xcconfig
+Config/Release.xcconfig

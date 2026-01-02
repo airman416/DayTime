@@ -213,6 +213,18 @@ struct OnboardingView: View {
             modelContext.insert(settings)
         }
         
+        // Save context and backup settings
+        do {
+            try modelContext.save()
+            
+            // Backup settings after saving
+            let descriptor = FetchDescriptor<UserSettings>()
+            let allSettings = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupSettings(allSettings)
+        } catch {
+            print("⚠️ Failed to save onboarding settings: \(error)")
+        }
+        
         withAnimation(.spring()) {
             isOnboardingComplete = true
         }
@@ -225,6 +237,17 @@ struct OnboardingView: View {
             // Create settings with empty name (fallback)
             let settings = UserSettings(userName: "", isOnboardingComplete: true)
             modelContext.insert(settings)
+            
+            // Save context and backup
+            do {
+                try modelContext.save()
+                let descriptor = FetchDescriptor<UserSettings>()
+                let allSettings = try modelContext.fetch(descriptor)
+                DataPersistenceService.shared.backupSettings(allSettings)
+            } catch {
+                print("⚠️ Failed to save onboarding settings: \(error)")
+            }
+            
             withAnimation(.spring()) {
                 isOnboardingComplete = true
             }
@@ -247,6 +270,18 @@ struct OnboardingView: View {
             // Create new settings with the existing name
             let settings = UserSettings(userName: name, isOnboardingComplete: true)
             modelContext.insert(settings)
+        }
+        
+        // Save context and backup settings
+        do {
+            try modelContext.save()
+            
+            // Backup settings after saving
+            let descriptor = FetchDescriptor<UserSettings>()
+            let allSettings = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupSettings(allSettings)
+        } catch {
+            print("⚠️ Failed to save onboarding settings: \(error)")
         }
         
         withAnimation(.spring()) {

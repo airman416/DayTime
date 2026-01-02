@@ -309,6 +309,21 @@ struct DashboardView: View {
                     modelContext.insert(startTrackingActivity)
                 }
                 
+                // Save context and backup
+                do {
+                    try modelContext.save()
+                    
+                    // Backup sessions and activities
+                    let sessionDescriptor = FetchDescriptor<TrackingSession>()
+                    let activityDescriptor = FetchDescriptor<ActivityEntry>()
+                    let allSessions = try modelContext.fetch(sessionDescriptor)
+                    let allActivities = try modelContext.fetch(activityDescriptor)
+                    DataPersistenceService.shared.backupSessions(allSessions)
+                    DataPersistenceService.shared.backupActivities(allActivities)
+                } catch {
+                    print("⚠️ Failed to save session: \(error)")
+                }
+                
                 // Start the flashing animation
                 withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
                     iconOpacity = 0.3
@@ -328,6 +343,18 @@ struct DashboardView: View {
         
         if let session = activeSession {
             session.stop()
+        }
+        
+        // Save context and backup
+        do {
+            try modelContext.save()
+            
+            // Backup sessions after stopping
+            let sessionDescriptor = FetchDescriptor<TrackingSession>()
+            let allSessions = try modelContext.fetch(sessionDescriptor)
+            DataPersistenceService.shared.backupSessions(allSessions)
+        } catch {
+            print("⚠️ Failed to save session stop: \(error)")
         }
         
         // Stop the flashing animation and return to solid

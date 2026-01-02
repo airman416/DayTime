@@ -11,8 +11,10 @@ import SwiftData
 actor GeminiService {
     static let shared = GeminiService()
     
-    // TODO: Add your Gemini API key here
-    private let apiKey: String = "AIzaSyD9A1v_KZT5FK1waWUFtkoowSYJxq8MjpQ"
+    // API key is loaded from Info.plist (which gets values from .xcconfig build settings)
+    private var apiKey: String {
+        Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String ?? ""
+    }
     private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     
     struct DaySummary {
@@ -26,7 +28,7 @@ actor GeminiService {
     }
     
     func generateDaySummary(userName: String, activities: [ActivityEntry]) async throws -> DaySummary {
-        guard apiKey != "YOUR_GEMINI_API_KEY_HERE" && !apiKey.isEmpty else {
+        guard !apiKey.isEmpty else {
             throw GeminiError.missingAPIKey
         }
         

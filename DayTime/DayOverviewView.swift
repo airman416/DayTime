@@ -195,13 +195,34 @@ struct DayOverviewView: View {
     private func updateActivity() {
         guard let activity = editingActivity else { return }
         activity.activity = editText
-        try? modelContext.save()
+        
+        do {
+            try modelContext.save()
+            
+            // Backup activities after updating
+            let descriptor = FetchDescriptor<ActivityEntry>()
+            let allActivities = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupActivities(allActivities)
+        } catch {
+            print("⚠️ Failed to update activity: \(error)")
+        }
+        
         showingEditSheet = false
     }
     
     private func deleteActivity(_ activity: ActivityEntry) {
         modelContext.delete(activity)
-        try? modelContext.save()
+        
+        do {
+            try modelContext.save()
+            
+            // Backup activities after deleting
+            let descriptor = FetchDescriptor<ActivityEntry>()
+            let allActivities = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupActivities(allActivities)
+        } catch {
+            print("⚠️ Failed to delete activity: \(error)")
+        }
     }
 }
 

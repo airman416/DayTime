@@ -13,6 +13,7 @@ struct DaySummaryView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var activities: [ActivityEntry]
     @Query private var settings: [UserSettings]
+    @Query private var summaries: [DaySummary]
     
     @State private var isLoading = false
     @State private var summary: GeminiService.DaySummary?
@@ -20,6 +21,7 @@ struct DaySummaryView: View {
     @State private var clockyRotation: Double = 0
     @State private var showingShareSheet = false
     @State private var fallbackMode = false
+    @State private var hasLoadedPersistedSummary = false
     
     // UserDefaults key for storing name as backup (in case SwiftData falls back to in-memory)
     private static let userNameKey = "DayTime_UserName"
@@ -50,6 +52,15 @@ struct DaySummaryView: View {
         }.sorted { $0.timestamp < $1.timestamp }
     }
     
+    /// Get the persisted summary for today, if it exists
+    private var todaySummary: DaySummary? {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return summaries.first { summary in
+            calendar.isDate(summary.date, inSameDayAs: today)
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -73,6 +84,9 @@ struct DaySummaryView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            loadPersistedSummary()
+        }
         .sheet(isPresented: $showingShareSheet) {
             if let summary = summary {
                 ShareSheet(
@@ -237,7 +251,14 @@ struct DaySummaryView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
-                Button(action: generateSummary) {
+                Button(action: {
+                    // Delete existing summary before regenerating
+                    if let existingSummary = todaySummary {
+                        modelContext.delete(existingSummary)
+                        try? modelContext.save()
+                    }
+                    generateSummary()
+                }) {
                     HStack {
                         Image(systemName: "arrow.clockwise")
                         Text("Regenerate Summary")
@@ -366,6 +387,11 @@ struct DaySummaryView: View {
                     .foregroundColor(.secondary)
                 
                 Button(action: {
+                    // Delete existing summary before regenerating
+                    if let existingSummary = todaySummary {
+                        modelContext.delete(existingSummary)
+                        try? modelContext.save()
+                    }
                     fallbackMode = false
                     generateSummary()
                 }) {
@@ -416,6 +442,22 @@ struct DaySummaryView: View {
         }
     }
     
+    /// Load persisted summary for today if it exists
+    private func loadPersistedSummary() {
+        guard !hasLoadedPersistedSummary else { return }
+        hasLoadedPersistedSummary = true
+        
+        if let persistedSummary = todaySummary {
+            // Load the persisted summary
+            summary = persistedSummary.toGeminiSummary()
+            fallbackMode = persistedSummary.isFallbackMode
+            print("✅ Loaded persisted summary for today")
+        } else {
+            // No summary exists for today, show prompt
+            print("ℹ️ No persisted summary found for today")
+        }
+    }
+    
     private func generateSummary() {
         isLoading = true
         errorMessage = nil
@@ -433,6 +475,9 @@ struct DaySummaryView: View {
                 await MainActor.run {
                     self.summary = generatedSummary
                     self.isLoading = false
+                    
+                    // Save the summary to SwiftData
+                    saveSummary(generatedSummary, isFallback: false)
                 }
             } catch {
                 print("DEBUG: Failed to generate summary. Error: \(error.localizedDescription)")
@@ -449,11 +494,76 @@ struct DaySummaryView: View {
                         // If there are activities but Gemini failed, show timeline fallback
                         print("DEBUG: Has activities, showing fallback mode")
                         self.fallbackMode = true
+                        
+                        // Save fallback summary
+                        let fallbackSummary = createFallbackSummary()
+                        saveSummary(fallbackSummary, isFallback: true)
                     }
                     self.isLoading = false
                 }
             }
         }
+    }
+    
+    /// Save summary to SwiftData, replacing any existing summary for today
+    private func saveSummary(_ geminiSummary: GeminiService.DaySummary, isFallback: Bool) {
+        // Delete any existing summary for today
+        if let existingSummary = todaySummary {
+            modelContext.delete(existingSummary)
+        }
+        
+        // Create and save new summary
+        let newSummary = DaySummary(
+            date: Date(),
+            shareableOverview: geminiSummary.shareableOverview,
+            personalInsights: geminiSummary.personalInsights,
+            generatedDate: geminiSummary.generatedDate,
+            isFallbackMode: isFallback
+        )
+        
+        modelContext.insert(newSummary)
+        
+        do {
+            try modelContext.save()
+            print("✅ Saved summary for today")
+            
+            // Also backup to JSON
+            let descriptor = FetchDescriptor<DaySummary>()
+            let allSummaries = try modelContext.fetch(descriptor)
+            DataPersistenceService.shared.backupSummaries(allSummaries)
+        } catch {
+            print("⚠️ Failed to save summary: \(error)")
+        }
+    }
+    
+    /// Create a fallback summary from activities (when AI fails)
+    private func createFallbackSummary() -> GeminiService.DaySummary {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .long
+        let dateString = dateFormatter.string(from: Date())
+        
+        let shareableOverview = "\(displayName) tracked \(todayActivities.count) check-in\(todayActivities.count == 1 ? "" : "s") today with Clocky on DayTime! 🕐✨"
+        
+        var personalInsights = "Today's Activities (\(dateString)):\n\n"
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+        
+        for activity in todayActivities {
+            let time = timeFormatter.string(from: activity.timestamp)
+            personalInsights += "• \(time) - \(activity.activity)\n"
+        }
+        
+        let totalTime = calculateProductiveTime()
+        personalInsights += "\n📊 \(todayActivities.count) check-ins tracked"
+        if !totalTime.isEmpty && totalTime != "0m" {
+            personalInsights += " | \(totalTime) productive time"
+        }
+        
+        return GeminiService.DaySummary(
+            shareableOverview: shareableOverview,
+            personalInsights: personalInsights,
+            generatedDate: Date()
+        )
     }
     
     private func createShareText(_ summary: GeminiService.DaySummary) -> String {
@@ -530,7 +640,7 @@ struct ShareSheet: UIViewControllerRepresentable {
 #Preview {
     NavigationView {
         DaySummaryView()
-            .modelContainer(for: [ActivityEntry.self, UserSettings.self], inMemory: true)
+            .modelContainer(for: [ActivityEntry.self, UserSettings.self, DaySummary.self], inMemory: true)
     }
 }
 
