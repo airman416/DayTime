@@ -8,13 +8,18 @@
 import SwiftUI
 import SwiftData
 import SuperwallKit
+import UserNotifications
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [UserSettings]
     @State private var userName = ""
     @State private var timerInterval = 900 // 15 minutes in seconds
+    @State private var dailyReminderEnabled = false
+    @State private var showingPermissionAlert = false
+    @State private var showingPermissionExplanation = false
     private let timerService = TimerService.shared
+    private let notificationService = NotificationService.shared
     
     // UserDefaults key for storing name as backup (in case SwiftData falls back to in-memory)
     private static let userNameKey = "DayTime_UserName"
@@ -45,6 +50,13 @@ struct SettingsView: View {
                 }
             }
             
+            Section("Notifications") {
+                Toggle("Daily Reminder (9am)", isOn: $dailyReminderEnabled)
+                    .onChange(of: dailyReminderEnabled) { oldValue, newValue in
+                        handleDailyReminderToggle(newValue: newValue)
+                    }
+            }
+            
             Section("About") {
                 Link("Privacy Policy", destination: URL(string: "https://swipefeed.live/daytime-policy")!)
 
@@ -73,6 +85,26 @@ struct SettingsView: View {
             timerService.updateTimerInterval(newValue)
             saveSettings()
         }
+        .alert("Enable Daily Reminders?", isPresented: $showingPermissionExplanation) {
+            Button("Enable", role: .none) {
+                requestNotificationPermission()
+            }
+            Button("Cancel", role: .cancel) {
+                dailyReminderEnabled = false
+            }
+        } message: {
+            Text("DayTime needs notification permission to send you daily reminders at 9am. These reminders help you stay consistent with tracking your activities and building better productivity habits.")
+        }
+        .alert("Notification Permission Required", isPresented: $showingPermissionAlert) {
+            Button("Settings", role: .none) {
+                if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsUrl)
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Please enable notifications in Settings to receive daily reminders at 9am.")
+        }
     }
     
     private func formatInterval(_ seconds: Int) -> String {
@@ -88,6 +120,7 @@ struct SettingsView: View {
         if let settings = userSettings {
             userName = settings.userName
             timerInterval = settings.timerInterval
+            dailyReminderEnabled = settings.dailyReminderEnabled
         }
         
         // If userName is empty, try to load from UserDefaults backup
@@ -111,6 +144,7 @@ struct SettingsView: View {
             let oldName = existingSettings.userName
             existingSettings.userName = userName
             existingSettings.timerInterval = timerInterval
+            existingSettings.dailyReminderEnabled = dailyReminderEnabled
             
             // Update Superwall user attributes if name changed
             if oldName != userName {
@@ -123,7 +157,10 @@ struct SettingsView: View {
                 userName: userName,
                 timerInterval: timerInterval,
                 notificationSoundName: "default",
-                isOnboardingComplete: true
+                isOnboardingComplete: true,
+                subscriptionStatus: "unknown",
+                freeTrialEndDate: nil,
+                dailyReminderEnabled: dailyReminderEnabled
             )
             modelContext.insert(newSettings)
             
@@ -147,6 +184,50 @@ struct SettingsView: View {
         
         // Update the timer service with the new interval
         timerService.updateTimerInterval(timerInterval)
+    }
+    
+    private func handleDailyReminderToggle(newValue: Bool) {
+        if newValue {
+            // User wants to enable daily reminders - check permission status first
+            Task {
+                let status = await notificationService.getAuthorizationStatus()
+                
+                await MainActor.run {
+                    if status == .notDetermined {
+                        // Show explanation before requesting permission
+                        showingPermissionExplanation = true
+                    } else if status == .authorized {
+                        // Already authorized, schedule notification
+                        notificationService.scheduleDailyReminder()
+                        saveSettings()
+                    } else {
+                        // Permission denied previously, show alert to go to Settings
+                        dailyReminderEnabled = false
+                        showingPermissionAlert = true
+                    }
+                }
+            }
+        } else {
+            // User wants to disable daily reminders
+            notificationService.removeDailyReminder()
+            saveSettings()
+        }
+    }
+    
+    private func requestNotificationPermission() {
+        Task {
+            let granted = await notificationService.requestAuthorization()
+            await MainActor.run {
+                if granted {
+                    notificationService.scheduleDailyReminder()
+                    saveSettings()
+                } else {
+                    // Permission denied, revert toggle
+                    dailyReminderEnabled = false
+                    showingPermissionAlert = true
+                }
+            }
+        }
     }
 }
 

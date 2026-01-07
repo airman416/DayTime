@@ -4,6 +4,8 @@
 <dict>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>DayTime schedules check-in reminders to help you stay focused and track your productivity throughout the day.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>DayTime needs notification permission to send you daily reminders at 9am. These reminders help you stay consistent with tracking your activities and building better productivity habits.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>DayTime needs access to save your daily activity overview screenshots to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

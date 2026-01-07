@@ -71,7 +71,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "4.99",
+          "displayPrice" : "3.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6731234567",
@@ -101,16 +101,11 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "49.99",
+          "displayPrice" : "159.99",
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "6731234569",
-          "introductoryOffer" : {
-            "displayPrice" : "0.00",
-            "internalID" : "6731234570",
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P1W"
-          },
+          "introductoryOffer" : null,
           "localizations" : [
             {
               "description" : "Unlock all DayTime Pro features - Best Value",
@@ -132,4 +127,3 @@
     "minor" : 0
   }
 }
-

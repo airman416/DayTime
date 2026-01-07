@@ -101,7 +101,8 @@ class DataPersistenceService {
                     "timerInterval": setting.timerInterval,
                     "notificationSoundName": setting.notificationSoundName,
                     "isOnboardingComplete": setting.isOnboardingComplete,
-                    "subscriptionStatus": setting.subscriptionStatus
+                    "subscriptionStatus": setting.subscriptionStatus,
+                    "dailyReminderEnabled": setting.dailyReminderEnabled
                 ]
                 if let freeTrialEndDate = setting.freeTrialEndDate {
                     dict["freeTrialEndDate"] = ISO8601DateFormatter().string(from: freeTrialEndDate)
@@ -310,13 +311,17 @@ class DataPersistenceService {
                     freeTrialEndDate = dateFormatter.date(from: freeTrialEndDateString)
                 }
                 
+                // Handle dailyReminderEnabled with default value for backward compatibility
+                let dailyReminderEnabled = item["dailyReminderEnabled"] as? Bool ?? false
+                
                 let setting = UserSettings(
                     userName: userName,
                     timerInterval: timerInterval,
                     notificationSoundName: notificationSoundName,
                     isOnboardingComplete: isOnboardingComplete,
                     subscriptionStatus: subscriptionStatus,
-                    freeTrialEndDate: freeTrialEndDate
+                    freeTrialEndDate: freeTrialEndDate,
+                    dailyReminderEnabled: dailyReminderEnabled
                 )
                 
                 modelContext.insert(setting)

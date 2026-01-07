@@ -23,7 +23,7 @@ actor GeminiService {
         let generatedDate: Date
     }
     
-    private init() {
+    private init() {a
         // Initialize
     }
     

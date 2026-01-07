@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import SuperwallKit
+import UserNotifications
 
 @main
 struct DayTimeApp: App {
@@ -87,6 +88,9 @@ struct DayTimeApp: App {
         // API key is loaded from Info.plist (which gets values from .xcconfig build settings)
         let apiKey = Bundle.main.infoDictionary?["SUPERWALL_API_KEY"] as? String ?? ""
         Superwall.configure(apiKey: apiKey)
+        
+        // Set up notification delegate
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
     }
     
     var body: some Scene {
@@ -97,6 +101,7 @@ struct DayTimeApp: App {
                 }
                 .onAppear {
                     setupSuperwallDelegate()
+                    checkAndScheduleNotifications()
                 }
         }
         .modelContainer(sharedModelContainer)
@@ -154,6 +159,60 @@ struct DayTimeApp: App {
         if newPhase == .active && oldPhase != .active {
             print("📱 App became active - checking for pending alarms")
             // The Darwin notification observer will handle showing the UI if needed
+            checkAndScheduleNotifications()
         }
+    }
+    
+    /// Check notification settings and schedule daily reminder if enabled
+    private func checkAndScheduleNotifications() {
+        Task {
+            let context = sharedModelContainer.mainContext
+            let descriptor = FetchDescriptor<UserSettings>()
+            
+            do {
+                let settings = try context.fetch(descriptor)
+                if let userSettings = settings.first, userSettings.dailyReminderEnabled {
+                    // Check if we have notification permission
+                    let status = await NotificationService.shared.getAuthorizationStatus()
+                    if status == .authorized {
+                        // Schedule the notification
+                        NotificationService.shared.scheduleDailyReminder()
+                        print("✅ Daily reminder scheduled (enabled in settings)")
+                    } else {
+                        print("ℹ️ Daily reminder is enabled but notification permission not granted")
+                    }
+                } else {
+                    // Daily reminder is disabled, remove any scheduled notifications
+                    NotificationService.shared.removeDailyReminder()
+                }
+            } catch {
+                print("⚠️ Error checking notification settings: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Notification Delegate
+
+class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationDelegate()
+    
+    // Handle notification when app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Show notification even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
+    }
+    
+    // Handle notification tap
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        
+        // Check if this is a daily reminder notification
+        if let type = userInfo["type"] as? String, type == "daily_reminder" {
+            print("📱 Daily reminder notification tapped - app should open")
+            // The app will already be opened by the system, no additional action needed
+        }
+        
+        completionHandler()
     }
 }
