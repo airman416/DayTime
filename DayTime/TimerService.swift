@@ -27,6 +27,7 @@ class TimerService {
     var onAlarmTriggered: (() -> Void)?
     var nextCheckInDate: Date?
     var pausedTimeRemaining: TimeInterval?
+    var pauseStartDate: Date? // Track when pause started for accurate time calculation
     var isInputPresented = false
     
     private var liveActivityUpdateTimer: Timer? = nil
@@ -118,12 +119,25 @@ class TimerService {
                 return
             }
             
+            // Calculate accurate paused time remaining if paused
+            var currentPausedTimeRemaining: TimeInterval? = nil
+            if isPaused, let pauseStart = pauseStartDate, let originalRemaining = pausedTimeRemaining {
+                // Calculate how much time has passed since pause started
+                let timePassedSincePause = Date().timeIntervalSince(pauseStart)
+                // Remaining time is original minus time passed (but don't go negative)
+                currentPausedTimeRemaining = max(0, originalRemaining - timePassedSincePause)
+            } else if isPaused {
+                // Fallback to stored value if pauseStartDate not available
+                currentPausedTimeRemaining = pausedTimeRemaining
+            }
+            
             // Create content state - includes paused state
             let nextDate = nextCheckInDate ?? Date()
             let contentState = DayTimeActivityAttributes.ContentState(
                 nextCheckInTime: nextDate,
                 isPaused: isPaused,
-                pausedTimeRemaining: pausedTimeRemaining
+                pausedTimeRemaining: currentPausedTimeRemaining,
+                pauseStartDate: pauseStartDate
             )
             let content = ActivityContent(state: contentState, staleDate: nil)
 
@@ -161,11 +175,20 @@ class TimerService {
         currentSessionId = sessionId
         isRunning = true
         scheduleCheckInAndNags()
+        startLiveActivityUpdateTimer()
+        return sessionId
+    }
+    
+    private func startLiveActivityUpdateTimer() {
         liveActivityUpdateTimer?.invalidate()
-        liveActivityUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        // Create timer and add to common run loop modes so it continues during UI interactions
+        // Note: Timers still get suspended when app goes to background, but TimelineView in
+        // the live activity widget handles updates automatically
+        let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
             self.syncLiveActivity()
         }
-        return sessionId
+        RunLoop.current.add(timer, forMode: .common)
+        liveActivityUpdateTimer = timer
     }
     
     func restoreSession(sessionId: UUID) {
@@ -175,10 +198,7 @@ class TimerService {
         
         // Only start the update timer if not paused
         if !isPaused {
-            liveActivityUpdateTimer?.invalidate()
-            liveActivityUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-                self.syncLiveActivity()
-            }
+            startLiveActivityUpdateTimer()
         }
     }
     
@@ -186,6 +206,7 @@ class TimerService {
         guard isRunning && !isPaused else { return }
         
         isPaused = true
+        pauseStartDate = Date() // Track when pause started
         
         // Calculate time remaining
         if let nextDate = nextCheckInDate {
@@ -208,18 +229,25 @@ class TimerService {
         
         isPaused = false
         
+        // Calculate accurate remaining time accounting for time spent paused
+        var actualRemaining: TimeInterval = 0
+        if let pauseStart = pauseStartDate, let originalRemaining = pausedTimeRemaining {
+            let timePassedSincePause = Date().timeIntervalSince(pauseStart)
+            actualRemaining = max(0, originalRemaining - timePassedSincePause)
+        } else if let remaining = pausedTimeRemaining {
+            actualRemaining = remaining
+        }
+        
         // Reschedule with remaining time
-        if let remaining = pausedTimeRemaining, remaining > 0 {
-            nextCheckInDate = Date().addingTimeInterval(remaining)
-            scheduleAlarm(customInterval: Int(remaining))
+        if actualRemaining > 0 {
+            nextCheckInDate = Date().addingTimeInterval(actualRemaining)
+            scheduleAlarm(customInterval: Int(actualRemaining))
             syncLiveActivity()
         }
         
         pausedTimeRemaining = nil
-        liveActivityUpdateTimer?.invalidate()
-        liveActivityUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            self.syncLiveActivity()
-        }
+        pauseStartDate = nil
+        startLiveActivityUpdateTimer()
     }
     
     func stopSession() {
@@ -228,6 +256,7 @@ class TimerService {
         currentSessionId = nil
         nextCheckInDate = nil
         pausedTimeRemaining = nil
+        pauseStartDate = nil
         
         // Cancel AlarmKit alarm
         Task { @MainActor in

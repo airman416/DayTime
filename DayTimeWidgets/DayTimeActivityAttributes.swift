@@ -7,6 +7,7 @@ struct DayTimeActivityAttributes: ActivityAttributes {
         var nextCheckInTime: Date
         var isPaused: Bool
         var pausedTimeRemaining: TimeInterval?
+        var pauseStartDate: Date? // When pause started, so widget can calculate accurate remaining time
     }
 
     // Static state - for future use

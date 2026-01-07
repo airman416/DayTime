@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var userName = ""
     @State private var timerInterval = 900 // 15 minutes in seconds
     @State private var dailyReminderEnabled = false
+    @State private var dailyReminderTime = Date() // Default to 9:00 AM
     @State private var showingPermissionAlert = false
     @State private var showingPermissionExplanation = false
     private let timerService = TimerService.shared
@@ -51,10 +52,17 @@ struct SettingsView: View {
             }
             
             Section("Notifications") {
-                Toggle("Daily Reminder (9am)", isOn: $dailyReminderEnabled)
+                Toggle("Daily Reminder", isOn: $dailyReminderEnabled)
                     .onChange(of: dailyReminderEnabled) { oldValue, newValue in
                         handleDailyReminderToggle(newValue: newValue)
                     }
+                
+                if dailyReminderEnabled {
+                    DatePicker("Time", selection: $dailyReminderTime, displayedComponents: .hourAndMinute)
+                        .onChange(of: dailyReminderTime) { oldValue, newValue in
+                            handleReminderTimeChange()
+                        }
+                }
             }
             
             Section("About") {
@@ -93,7 +101,7 @@ struct SettingsView: View {
                 dailyReminderEnabled = false
             }
         } message: {
-            Text("DayTime needs notification permission to send you daily reminders at 9am. These reminders help you stay consistent with tracking your activities and building better productivity habits.")
+            Text("DayTime needs notification permission to send you daily reminders. These reminders help you stay consistent with tracking your activities and building better productivity habits.")
         }
         .alert("Notification Permission Required", isPresented: $showingPermissionAlert) {
             Button("Settings", role: .none) {
@@ -103,7 +111,7 @@ struct SettingsView: View {
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Please enable notifications in Settings to receive daily reminders at 9am.")
+            Text("Please enable notifications in Settings to receive daily reminders.")
         }
     }
     
@@ -121,6 +129,15 @@ struct SettingsView: View {
             userName = settings.userName
             timerInterval = settings.timerInterval
             dailyReminderEnabled = settings.dailyReminderEnabled
+            
+            // Load reminder time - use today's date with the stored hour and minute
+            let calendar = Calendar.current
+            var components = calendar.dateComponents([.year, .month, .day], from: Date())
+            components.hour = settings.dailyReminderHour
+            components.minute = settings.dailyReminderMinute
+            if let reminderDate = calendar.date(from: components) {
+                dailyReminderTime = reminderDate
+            }
         }
         
         // If userName is empty, try to load from UserDefaults backup
@@ -140,11 +157,18 @@ struct SettingsView: View {
             UserDefaults.standard.set(trimmedName, forKey: Self.userNameKey)
         }
         
+        // Extract hour and minute from reminder time
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: dailyReminderTime)
+        let minute = calendar.component(.minute, from: dailyReminderTime)
+        
         if let existingSettings = userSettings {
             let oldName = existingSettings.userName
             existingSettings.userName = userName
             existingSettings.timerInterval = timerInterval
             existingSettings.dailyReminderEnabled = dailyReminderEnabled
+            existingSettings.dailyReminderHour = hour
+            existingSettings.dailyReminderMinute = minute
             
             // Update Superwall user attributes if name changed
             if oldName != userName {
@@ -160,7 +184,9 @@ struct SettingsView: View {
                 isOnboardingComplete: true,
                 subscriptionStatus: "unknown",
                 freeTrialEndDate: nil,
-                dailyReminderEnabled: dailyReminderEnabled
+                dailyReminderEnabled: dailyReminderEnabled,
+                dailyReminderHour: hour,
+                dailyReminderMinute: minute
             )
             modelContext.insert(newSettings)
             
@@ -197,8 +223,8 @@ struct SettingsView: View {
                         // Show explanation before requesting permission
                         showingPermissionExplanation = true
                     } else if status == .authorized {
-                        // Already authorized, schedule notification
-                        notificationService.scheduleDailyReminder()
+                        // Already authorized, schedule notification with current time
+                        scheduleReminderWithCurrentTime()
                         saveSettings()
                     } else {
                         // Permission denied previously, show alert to go to Settings
@@ -214,12 +240,27 @@ struct SettingsView: View {
         }
     }
     
+    private func handleReminderTimeChange() {
+        // When time changes, reschedule notification if enabled
+        if dailyReminderEnabled {
+            scheduleReminderWithCurrentTime()
+            saveSettings()
+        }
+    }
+    
+    private func scheduleReminderWithCurrentTime() {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: dailyReminderTime)
+        let minute = calendar.component(.minute, from: dailyReminderTime)
+        notificationService.scheduleDailyReminder(hour: hour, minute: minute)
+    }
+    
     private func requestNotificationPermission() {
         Task {
             let granted = await notificationService.requestAuthorization()
             await MainActor.run {
                 if granted {
-                    notificationService.scheduleDailyReminder()
+                    scheduleReminderWithCurrentTime()
                     saveSettings()
                 } else {
                     // Permission denied, revert toggle

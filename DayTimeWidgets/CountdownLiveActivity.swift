@@ -17,9 +17,17 @@ struct CountdownLiveActivity: Widget {
         ActivityConfiguration(for: DayTimeActivityAttributes.self) { context in
             // Lock screen/banner UI - Bigger elements
             let isPaused = context.state.isPaused
-            let pausedTime = context.state.pausedTimeRemaining ?? 0
+            // Calculate accurate paused time: if paused, account for time passed since pause started
+            let pausedTime: TimeInterval = {
+                if isPaused, let pauseStart = context.state.pauseStartDate, let originalRemaining = context.state.pausedTimeRemaining {
+                    let timePassedSincePause = Date().timeIntervalSince(pauseStart)
+                    return max(0, originalRemaining - timePassedSincePause)
+                } else if isPaused {
+                    return context.state.pausedTimeRemaining ?? 0
+                }
+                return 0
+            }()
             let activeTime = max(0, context.state.nextCheckInTime.timeIntervalSinceNow)
-            let displayTime = isPaused ? pausedTime : activeTime
             
             HStack(spacing: 20) {
                 // Control buttons on the left - Just swap pause/play icon
@@ -67,7 +75,17 @@ struct CountdownLiveActivity: Widget {
                             .scaledToFit()
                             .frame(width: 50, height: 50)
                         
-                        let currentDisplayTime = isPaused ? pausedTime : max(0, context.state.nextCheckInTime.timeIntervalSince(timeline.date))
+                        // Calculate display time: if paused, use calculated paused time, otherwise use active countdown
+                        let currentDisplayTime: TimeInterval = {
+                            if isPaused {
+                                if let pauseStart = context.state.pauseStartDate, let originalRemaining = context.state.pausedTimeRemaining {
+                                    let timePassedSincePause = timeline.date.timeIntervalSince(pauseStart)
+                                    return max(0, originalRemaining - timePassedSincePause)
+                                }
+                                return context.state.pausedTimeRemaining ?? 0
+                            }
+                            return max(0, context.state.nextCheckInTime.timeIntervalSince(timeline.date))
+                        }()
                         Text(formatTime(currentDisplayTime))
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
@@ -83,9 +101,17 @@ struct CountdownLiveActivity: Widget {
 
         } dynamicIsland: { context in
             let isPaused = context.state.isPaused
-            let pausedTime = context.state.pausedTimeRemaining ?? 0
+            // Calculate accurate paused time: if paused, account for time passed since pause started
+            let pausedTime: TimeInterval = {
+                if isPaused, let pauseStart = context.state.pauseStartDate, let originalRemaining = context.state.pausedTimeRemaining {
+                    let timePassedSincePause = Date().timeIntervalSince(pauseStart)
+                    return max(0, originalRemaining - timePassedSincePause)
+                } else if isPaused {
+                    return context.state.pausedTimeRemaining ?? 0
+                }
+                return 0
+            }()
             let activeTime = max(0, context.state.nextCheckInTime.timeIntervalSinceNow)
-            let displayTime = isPaused ? pausedTime : activeTime
             
             return DynamicIsland {
                 // Expanded UI - Bigger elements
@@ -132,7 +158,17 @@ struct CountdownLiveActivity: Widget {
                                 .scaledToFit()
                                 .frame(width: 40, height: 40)
                             
-                            let currentDisplayTime = isPaused ? pausedTime : max(0, context.state.nextCheckInTime.timeIntervalSince(timeline.date))
+                            // Calculate display time: if paused, use calculated paused time, otherwise use active countdown
+                            let currentDisplayTime: TimeInterval = {
+                                if isPaused {
+                                    if let pauseStart = context.state.pauseStartDate, let originalRemaining = context.state.pausedTimeRemaining {
+                                        let timePassedSincePause = timeline.date.timeIntervalSince(pauseStart)
+                                        return max(0, originalRemaining - timePassedSincePause)
+                                    }
+                                    return context.state.pausedTimeRemaining ?? 0
+                                }
+                                return max(0, context.state.nextCheckInTime.timeIntervalSince(timeline.date))
+                            }()
                             Text(formatTime(currentDisplayTime))
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .monospacedDigit()

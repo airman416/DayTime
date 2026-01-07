@@ -84,8 +84,11 @@ class NotificationService {
         return settings.authorizationStatus
     }
     
-    /// Schedule daily notification at 9am
-    func scheduleDailyReminder() {
+    /// Schedule daily notification at specified time
+    /// - Parameters:
+    ///   - hour: Hour of the day (0-23)
+    ///   - minute: Minute of the hour (0-59)
+    func scheduleDailyReminder(hour: Int = 9, minute: Int = 0) {
         // Remove any existing daily reminder notifications first
         removeDailyReminder()
         
@@ -99,16 +102,16 @@ class NotificationService {
         // Configure notification to open the app when tapped
         content.userInfo = ["type": "daily_reminder"]
         
-        // Schedule for 9am every day
+        // Schedule for specified time every day
         var dateComponents = DateComponents()
-        dateComponents.hour = 9
-        dateComponents.minute = 0
+        dateComponents.hour = hour
+        dateComponents.minute = minute
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         
         // Create request with unique identifier
         let request = UNNotificationRequest(
-            identifier: "daily_reminder_9am",
+            identifier: "daily_reminder",
             content: content,
             trigger: trigger
         )
@@ -118,15 +121,16 @@ class NotificationService {
             if let error = error {
                 print("⚠️ Error scheduling daily reminder: \(error)")
             } else {
-                print("✅ Daily reminder scheduled for 9am")
+                let timeString = String(format: "%02d:%02d", hour, minute)
+                print("✅ Daily reminder scheduled for \(timeString)")
             }
         }
     }
     
     /// Remove the daily reminder notification
     func removeDailyReminder() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["daily_reminder_9am"])
-        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["daily_reminder_9am"])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["daily_reminder"])
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["daily_reminder"])
     }
     
     /// Get a random message from the predefined list
@@ -136,12 +140,15 @@ class NotificationService {
     
     /// Update the scheduled notification with a new random message
     /// This is useful if you want to refresh the message periodically
-    func refreshNotificationMessage() {
+    /// - Parameters:
+    ///   - hour: Hour of the day (0-23)
+    ///   - minute: Minute of the hour (0-59)
+    func refreshNotificationMessage(hour: Int = 9, minute: Int = 0) {
         // Check if notification is already scheduled
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-            if requests.contains(where: { $0.identifier == "daily_reminder_9am" }) {
+            if requests.contains(where: { $0.identifier == "daily_reminder" }) {
                 // Reschedule with new message
-                self.scheduleDailyReminder()
+                self.scheduleDailyReminder(hour: hour, minute: minute)
             }
         }
     }

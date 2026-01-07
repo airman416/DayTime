@@ -52,8 +52,10 @@ final class UserSettings {
     var subscriptionStatus: String // "active", "inactive", or "unknown"
     var freeTrialEndDate: Date?
     var dailyReminderEnabled: Bool
+    var dailyReminderHour: Int // Hour (0-23) for daily reminder
+    var dailyReminderMinute: Int // Minute (0-59) for daily reminder
     
-    init(userName: String = "", timerInterval: Int = 900, notificationSoundName: String = "default", isOnboardingComplete: Bool = false, subscriptionStatus: String = "unknown", freeTrialEndDate: Date? = nil, dailyReminderEnabled: Bool = false) { // 900 seconds = 15 minutes
+    init(userName: String = "", timerInterval: Int = 900, notificationSoundName: String = "default", isOnboardingComplete: Bool = false, subscriptionStatus: String = "unknown", freeTrialEndDate: Date? = nil, dailyReminderEnabled: Bool = false, dailyReminderHour: Int = 9, dailyReminderMinute: Int = 0) { // 900 seconds = 15 minutes, default reminder at 9:00am
         self.userName = userName
         self.timerInterval = timerInterval
         self.notificationSoundName = notificationSoundName
@@ -61,6 +63,8 @@ final class UserSettings {
         self.subscriptionStatus = subscriptionStatus
         self.freeTrialEndDate = freeTrialEndDate
         self.dailyReminderEnabled = dailyReminderEnabled
+        self.dailyReminderHour = dailyReminderHour
+        self.dailyReminderMinute = dailyReminderMinute
     }
 }
 

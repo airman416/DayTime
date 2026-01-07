@@ -160,6 +160,19 @@ struct DayTimeApp: App {
             print("📱 App became active - checking for pending alarms")
             // The Darwin notification observer will handle showing the UI if needed
             checkAndScheduleNotifications()
+            
+            // Sync live activity state when app becomes active
+            // This ensures the widget has the latest state after being backgrounded
+            if TimerService.shared.isRunning {
+                TimerService.shared.syncLiveActivity()
+            }
+        } else if newPhase == .background && oldPhase == .active {
+            print("📱 App going to background - ensuring live activity state is synced")
+            // Final sync before going to background to ensure widget has latest state
+            // TimelineView will continue updating automatically
+            if TimerService.shared.isRunning {
+                TimerService.shared.syncLiveActivity()
+            }
         }
     }
     
@@ -175,9 +188,13 @@ struct DayTimeApp: App {
                     // Check if we have notification permission
                     let status = await NotificationService.shared.getAuthorizationStatus()
                     if status == .authorized {
-                        // Schedule the notification
-                        NotificationService.shared.scheduleDailyReminder()
-                        print("✅ Daily reminder scheduled (enabled in settings)")
+                        // Schedule the notification with user's preferred time
+                        NotificationService.shared.scheduleDailyReminder(
+                            hour: userSettings.dailyReminderHour,
+                            minute: userSettings.dailyReminderMinute
+                        )
+                        let timeString = String(format: "%02d:%02d", userSettings.dailyReminderHour, userSettings.dailyReminderMinute)
+                        print("✅ Daily reminder scheduled for \(timeString) (enabled in settings)")
                     } else {
                         print("ℹ️ Daily reminder is enabled but notification permission not granted")
                     }
